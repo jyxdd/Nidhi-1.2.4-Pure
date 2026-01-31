@@ -1,10 +1,10 @@
 name: Build and Release All Kernels
 
 on:
-  workflow_dispatch: # 手动触发
+  workflow_dispatch:
 
 permissions:
-  contents: write # 赋予创建 Release 的权限
+  contents: write
 
 jobs:
   build:
@@ -12,7 +12,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 对应 README 中的支持设备列表
         device: [psyche, thyme, umi, munch, lmi, cmi, cas, apollo, alioth, elish, enuma, dagu, pipa]
         ksu_enabled: [true, false]
 
@@ -20,19 +19,28 @@ jobs:
 
     steps:
       - name: Checkout Source
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
       - name: Install Dependencies
-        # 安装构建环境所需依赖
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential git curl wget bison flex zip bc cpio libssl-dev ccache python-is-python3
           sudo apt-get install -y gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
 
+      - name: Setup Cache (ccache)
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache_mikernel
+          # 统一使用 global 标识，通过 run_id 保证每次运行能上传新缓存
+          key: kernel-ccache-global-${{ github.run_id }}
+          # 优先级：先找 global，再尝试找任何相关的
+          restore-keys: |
+            kernel-ccache-global-
+            kernel-ccache-
+
       - name: Setup Toolchain (ZyC-Clang 15)
-        # 下载并配置 build.sh 指定的工具链路径
         run: |
           mkdir -p $HOME/zyc-clang
           cd $HOME/zyc-clang
@@ -40,7 +48,6 @@ jobs:
           tar -zxvf Clang-15.0.7-20251111.tar.gz
 
       - name: Run Build Script
-        # 调用脚本，自动生成 AOSP 和 MIUI 两个版本的 Zip
         run: |
           chmod +x build.sh
           if [ "${{ matrix.ksu_enabled }}" = "true" ]; then
@@ -50,8 +57,7 @@ jobs:
           fi
 
       - name: Upload Local Artifacts
-        # 将生成的 Zip 暂时存储到 GitHub 暂存区
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: Kernel-artifacts-${{ matrix.device }}-${{ matrix.ksu_enabled && 'KSU' || 'NoKSU' }}
           path: ./*.zip
@@ -61,18 +67,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Download All Artifacts
-        # 下载之前所有矩阵任务生成的 Zip 文件
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v4
         with:
           path: all_kernels
-          pattern: kernel-artifacts-*
+          pattern: Kernel-artifacts-*
           merge-multiple: true
 
       - name: Prepare Release Info
-        # 获取构建日期和 SHA1
         id: info
         run: |
           echo "BUILD_DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
@@ -80,7 +84,6 @@ jobs:
           echo "TAG_NAME=v$(date +'%Y%m%d')-$(git rev-parse --short=8 HEAD)" >> $GITHUB_ENV
 
       - name: Create GitHub Release
-        # 使用 softprops/action-gh-release 自动发布
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.TAG_NAME }}
@@ -98,5 +101,30 @@ jobs:
             - **AOSP**: 适用于类原生 ROM (LineageOS, Pixel Experience 等)。
             - **SukiSU-SUSFS**: 已集成 ReSukiSU 和 SuSFS 补丁。
           files: all_kernels/*.zip
-          draft: false
-          prerelease: false
+
+      - name: Send Files to Telegram
+        env:
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+        run: |
+          MSG="🚀 *ApartTUSITU Kernel 构建任务完成* %0A%0A"
+          MSG+="📅 *日期:* ${{ env.BUILD_DATE }} %0A"
+          MSG+="🔗 [查看 GitHub Release](https://github.com/${{ github.repository }}/releases/tag/${{ env.TAG_NAME }}) %0A%0A"
+          MSG+="📦 开始上传文件..."
+          
+          curl -s -X POST "https://api.telegram.org/bot$TG_TOKEN/sendMessage" \
+            -d "chat_id=$TG_CHAT_ID" \
+            -d "parse_mode=Markdown" \
+            -d "text=$MSG"
+
+          for file in all_kernels/*.zip; do
+            filename=$(basename "$file")
+            echo "正在上传: $filename"
+            
+            curl -s -F chat_id="$TG_CHAT_ID" \
+                 -F document=@"$file" \
+                 -F caption="✅ $filename" \
+                 "https://api.telegram.org/bot$TG_TOKEN/sendDocument"
+            
+            sleep 1
+          done
