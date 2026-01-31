@@ -688,18 +688,8 @@ error:
 	return retval;
 }
 
-#ifdef CONFIG_KSU
-extern int ksu_handle_setresuid(uid_t ruid, uid_t euid, uid_t suid);
-#endif
-
 SYSCALL_DEFINE3(setresuid, uid_t, ruid, uid_t, euid, uid_t, suid)
 {
-#ifdef CONFIG_KSU_SUSFS
-	if (ksu_handle_setresuid(ruid, euid, suid)) {
-		pr_info("Something wrong with ksu_handle_setresuid()\\n");
-	}
-#endif
-
 	return __sys_setresuid(ruid, euid, suid);
 }
 
@@ -1262,13 +1252,15 @@ SYSCALL_DEFINE1(newuname, struct new_utsname __user *, name)
 #ifdef CONFIG_KSU_SUSFS_SPOOF_UNAME
 	susfs_spoof_uname(&tmp);
 #endif
-	if (!strncmp(current->comm, "bpfloader", 9) ||
-	    !strncmp(current->comm, "netbpfload", 10) ||
-	    !strncmp(current->comm, "netd", 4) ||
-	    !strncmp(current->comm, "uprobestats", 11)) {
-		strcpy(tmp.release, "5.10.240");
-		pr_debug("fake uname: %s release=%s\n",
-			 current->comm, tmp.release);
+	if (current_uid().val == 0) {
+		if (!strncmp(current->comm, "bpfloader", 9) ||
+		    !strncmp(current->comm, "netbpfload", 10) ||
+		    !strncmp(current->comm, "netd", 4) ||
+		    !strncmp(current->comm, "uprobestats", 11)) {
+			strcpy(tmp.release, "5.10.240");
+			pr_debug("fake uname: %s release=%s\n",
+				 current->comm, tmp.release);
+		}
 	}
 	up_read(&uts_sem);
 	if (copy_to_user(name, &tmp, sizeof(tmp)))
