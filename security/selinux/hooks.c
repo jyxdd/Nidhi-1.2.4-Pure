@@ -2213,41 +2213,25 @@ static u32 ptrace_parent_sid(void)
 	return sid;
 }
 
+#ifdef CONFIG_BBG
+extern int bbg_test_domain_transition(u32 target_secid);
+#endif
+
 static int check_nnp_nosuid(const struct linux_binprm *bprm,
 			    const struct task_security_struct *old_tsec,
 			    const struct task_security_struct *new_tsec)
 {
-#ifdef CONFIG_KSU
-    static u32 ksu_sid;
-    char *secdata;
-#endif
+
 	int nnp = (bprm->unsafe & LSM_UNSAFE_NO_NEW_PRIVS);
 	int nosuid = !mnt_may_suid(bprm->file->f_path.mnt);
 	int rc;
 	u32 av;
 
-#ifdef CONFIG_KSU
-    int error;
-    u32 seclen;
-#endif
 	if (!nnp && !nosuid)
 		return 0; /* neither NNP nor nosuid */
 
 	if (new_tsec->sid == old_tsec->sid)
 		return 0; /* No change in credentials */
-
-#ifdef CONFIG_KSU
-    if (!ksu_sid)
-        security_secctx_to_secid("u:r:su:s0", strlen("u:r:su:s0"), &ksu_sid);
-
-    error = security_secid_to_secctx(old_tsec->sid, &secdata, &seclen);
-    if (!error) {
-        rc = strcmp("u:r:init:s0", secdata);
-        security_release_secctx(secdata, seclen);
-        if (rc == 0 && new_tsec->sid == ksu_sid)
-            return 0;
-    }
-#endif
 
 	/*
 	 * If the policy enables the nnp_nosuid_transition policy capability,
@@ -2357,7 +2341,11 @@ static int selinux_bprm_set_creds(struct linux_binprm *bprm)
 				  SECCLASS_PROCESS, PROCESS__TRANSITION, &ad);
 		if (rc)
 			return rc;
-
+#ifdef CONFIG_BBG
+if (unlikely(bbg_test_domain_transition(new_tsec->sid))) {
+	return -EACCES;
+}
+#endif
 		rc = avc_has_perm(&selinux_state,
 				  new_tsec->sid, isec->sid,
 				  SECCLASS_FILE, FILE__ENTRYPOINT, &ad);
@@ -6398,7 +6386,11 @@ static int selinux_setprocattr(const char *name, void *value, size_t size)
 		if (error)
 			return error;
 	}
-
+#ifdef CONFIG_BBG
+if (unlikely(bbg_test_domain_transition(sid))) {
+	return -EACCES;
+}
+#endif
 	new = prepare_creds();
 	if (!new)
 		return -ENOMEM;

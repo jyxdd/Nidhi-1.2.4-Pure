@@ -788,4 +788,15 @@ CONFIG_BUG_ON_DATA_CORRUPTION=y
 CONFIG_CC_WERROR=y
 CONFIG_DEBUG_ALIGN_RODATA=y
 CONFIG_TECHPACK_CAMERA_XIAOMI_TABLET=y
+
+CONFIG_LSM="lockdown,yama,loadpin,safesetid,integrity,selinux,smack,tomoyo,apparmor,baseband_guard"
+#
+# Baseband Security Guard Configuration
+#
 CONFIG_BBG=y
+CONFIG_BBG_ALLOW_IN_RECOVERY=y
+# CONFIG_BBG_BLOCK_BOOT is not set
+# CONFIG_BBG_BLOCK_RECOVERY is not set
+CONFIG_BBG_DOMAIN_PROTECTION=y
+CONFIG_BBG_ANTI_SPOOF_DOMAIN=3
+# end of Baseband Security Guard Configuration
