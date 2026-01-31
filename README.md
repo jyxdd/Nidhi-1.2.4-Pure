@@ -1,28 +1,28 @@
 # Warning
-**中文:**  
-内核源码仍在开发中，可能会导致一些不可预料的问题，请谨慎使用。  
+**বাংলা:**  
+কার্নেল সোর্স কোড এখনও উন্নয়নাধীন এবং কিছু অপ্রত্যাশিত সমস্যা সৃষ্টি করতে পারে। দয়া করে সতর্কতার সাথে ব্যবহার করুন।  
 **English:**  
 The kernel source code is still under development and may cause some unpredictable problems. Please use it with caution.  
 
-# ApartTUSITU's Xiaomi SM8250 Kernel  
+# NidhiKernel for Xiaomi SM8250 android devices  
 
-## 目录 / Table of Contents
-- [简介 / Introduction](#简介--introduction)  
-- [特性 / Features](#特性--features)  
-- [注意事项 / Notes](#注意事项--notes)  
-- [社区 / Community](#社区--community)  
-- [支持的设备 / Supported Devices](#支持的设备--supported-devices)   
-- [构建方法 / Build Instructions](#构建方法--build-instructions)  
-  - [快速构建 / Quick Build](#快速构建--quick-build)  
-  - [手动构建 / Manual Build](#手动构建--manual-build)  
+## সূচিপত্র / Table of Contents
+- [ভূমিকা / Introduction](#简介--introduction)  
+- [বৈশিষ্ট্য / Features](#特性--features)  
+- [নোট / Notes](#注意事项--notes)  
+- [কমিউনিটি / Community](#社区--community)  
+- [সমর্থিত ডিভাইস / Supported Devices](#支持的设备--supported-devices)   
+- [বিল্ড নির্দেশাবলী / Build Instructions](#构建方法--build-instructions)  
+  - [দ্রুত বিল্ড / Quick Build](#快速构建--quick-build)  
+  - [ম্যানুয়াল বিল্ড / Manual Build](#手动构建--manual-build)   
 
 ---
 
-## 简介 / Introduction
-**中文:**  
-该 repo 基于 [LineageOS/android_kernel_xiaomi_sm8250](https://github.com/LineageOS/android_kernel_xiaomi_sm8250) 的 `lineage-23` 分支。HyperOS/MIUI 所需的代码及部分设备所需驱动是对照着 [Strawing 的仓库](https://github.com/liyafe1997/kernel_xiaomi_sm8250_mod) 的提交记录扣的，它们来自 [UtsavBalar1231 的仓库](https://github.com/UtsavBalar1231/kernel_xiaomi_sm8250) 和 [Xiaomi_Kernel_OpenSource](https://github.com/MiCode/Xiaomi_Kernel_OpenSource)。  
+## ভূমিকা / Introduction
+**বাংলা:**  
+এই রিপোজিটরি [LineageOS/android_kernel_xiaomi_sm8250](https://github.com/LineageOS/android_kernel_xiaomi_sm8250) এর `lineage-23` ব্রাঞ্চের উপর ভিত্তি করে তৈরি। HyperOS/MIUI এর জন্য প্রয়োজনীয় কোড এবং কিছু ডিভাইস-নির্দিষ্ট ড্রাইভার [Strawing এর রিপোজিটরি](https://github.com/liyafe1997/kernel_xiaomi_sm8250_mod) এর কমিট হিস্ট্রি তুলনা করে বাছাই করা হয়েছে, যা [UtsavBalar1231 এর রিপোজিটরি](https://github.com/UtsavBalar1231/kernel_xiaomi_sm8250) এবং [Xiaomi_Kernel_OpenSource](https://github.com/MiCode/Xiaomi_Kernel_OpenSource) থেকে এসেছে।  
 
-这套源码相当于踩在巨人们的肩膀上，集百家之长，尽量使内核变得更好用。  
+এই সোর্স কোড দৈত্যদের কাঁধে দাঁড়িয়ে আছে, একাধিক উৎস থেকে অবদান সংযুক্ত করে কার্নেলকে যতটা সম্ভব ভালো করে তোলার চেষ্টা করা হয়েছে।  
 
 **English:**  
 This repository is based on the `lineage-23` branch of [LineageOS/android_kernel_xiaomi_sm8250](https://github.com/LineageOS/android_kernel_xiaomi_sm8250).
@@ -33,30 +33,27 @@ This kernel stands on the shoulders of giants, combining contributions from mult
 
 ---
 
-## 特性 / Features
-**中文:**  
-本内核支持 [ReSukiSU](https://github.com/ReSukiSU/ReSukiSU)(基于 [SukiSU Ultra](https://github.com/SukiSU-Ultra/SukiSU-Ultra), 一个 KernelSU 的 fork，支持 KPM) & [SuSFS](https://gitlab.com/simonpunk/susfs4ksu)。请自行安装 ReSukiSU 的管理器。NoKernelSU 版本支持应用 Magisk 和 APatch(及他们的分支)。  
+## বৈশিষ্ট্য / Features
+**বাংলা:**  
+এই কার্নেল [sidex15's KernelSU-Next fork]() ([KernelSU-Next]() এর উপর ভিত্তি করে, KernelSU এর একটি ফর্ক) এবং [SuSFS](https://gitlab.com/simonpunk/susfs4ksu) সমর্থন করে। দয়া করে [KernelSU-Next ম্যানেজার]() নিজে ইনস্টল করুন। NoKernelSU সংস্করণ Magisk এবং APatch (এবং তাদের ফর্ক) সমর্থন করে।
 
-**Release** 里的编译好的内核成品由 `android16-aptusitu` 分支编译，应当能在原版 MIUI/HyperOS 和第三方的基于 AOSP 的各种 Android11-16 的 ROM 上使用。欢迎大家尝试并反馈(提 Issue 或 Pull Requests)! 酷友们到 [这个帖子](https://www.coolapk.com/feed/67088487) 讨论或反馈，也可以加入 QQ 群，或者给我私信反馈!  
+এই কার্নেল এর NoKernelSU ভার্সন Magisk বা Apatch (এবং তার ফর্ক) ব্যাবহার করতে পারবেন।
 
-以下是一些具体的功能:   
-1. 支持 USB 串口驱动(CH340/FTDI/PL2303/OTI6858/TI/SPCP8X5/QT2/UPD78F0730/CP210X)  
-2. 支持 CANBus 和 USB CAN (如 CANable) 适配器  
-3. F2FS 开启了 realtime discard 以更好地 TRIM 闪存  
-4. 支持 EROFS  
-5. zRAM 支持 LZ4、LZ4HC、lz4k_oplus、LZ4KD、ZSTD 等压缩算法  
-6. 向后移植 5.10 BPF(支持安卓 16)  
-7. 触摸屏驱动、相机驱动、音频驱动、GPU/DRM/MSM、CNSS2 驱动使用小米版本(来自 UtsavBalar1231's repo 和 MiCode, AOSP 版 Display/DRM 驱动为 LineageOS 版本), 并且触摸屏驱动具有双击亮屏节点  
-8. 修复[电量卡在 1% 的问题](https://github.com/liyafe1997/Xiaomi-fix-battery-one-percent)，并且支持解容
-9. 集成 [BBG(Baseband-guard)](https://github.com/vc-teahouse/Baseband-guard)  
+নিচে কিছু মূল বৈশিষ্ট্য দেওয়া হল:   
+1. USB সিরিয়াল ড্রাইভার সমর্থন (CH340/FTDI/PL2303/OTI6858/TI/SPCP8X5/QT2/UPD78F0730/CP210X)  
+2. CANBus এবং USB CAN অ্যাডাপ্টার (যেমন CANable) সমর্থন  
+3. F2FS-এ realtime discard সক্রিয় করা হয়েছে উন্নত ফ্ল্যাশ TRIM আচরণের জন্য  
+4. EROFS সমর্থন  
+5. zRAM একাধিক কম্প্রেশন অ্যালগরিদম সমর্থন করে, যার মধ্যে রয়েছে LZ4, LZ4HC, lz4k_oplus, LZ4KD এবং ZSTD  
+6. Linux 5.10 থেকে ব্যাকপোর্ট করা BPF (Android 16 সামঞ্জস্যপূর্ণ)  
+7. টাচস্ক্রিন, ক্যামেরা, অডিও, GPU/DRM/MSM এবং CNSS2 ড্রাইভার Xiaomi-নির্দিষ্ট ইমপ্লিমেন্টেশন ব্যবহার করে (UtsavBalar1231 এর রিপোজিটরি এবং MiCode থেকে প্রাপ্ত। Display/DRM ড্রাইভারের AOSP সংস্করণ হল LineageOS সংস্করণ); এছাড়াও, টাচস্ক্রিন ড্রাইভারে `double_tap` নোড যোগ করা হয়েছে  
+8. [ব্যাটারি শতাংশ 1% এ আটকে থাকার সমস্যা](https://github.com/liyafe1997/Xiaomi-fix-battery-one-percent) ঠিক করা হয়েছে এবং উচ্চ ক্ষমতার প্রতিস্থাপন ব্যাটারি সনাক্তকরণ সমর্থন করে
+9. [BBG (Baseband-guard)](https://github.com/vc-teahouse/Baseband-guard) সংহত করা হয়েছে  
 
 **English:**  
-This kernel supports [ReSukiSU](https://github.com/ReSukiSU/ReSukiSU) (based on [SukiSU Ultra](https://github.com/SukiSU-Ultra/SukiSU-Ultra), a fork of KernelSU with KPM support) & [SuSFS](https://gitlab.com/simonpunk/susfs4ksu).  
-Please install the ReSukiSU Manager by yourself.  
-The NoKernelSU version supports Magisk and APatch (and their forks).  
+This kernel supports [sidex15's KernelSU-Next fork]() ([KernelSU-Next](), a fork of KernelSU ) & [SuSFS](https://gitlab.com/simonpunk/susfs4ksu). Please install the [KernelSU-Next ম্যানেজার]() by yourself.
 
-The prebuilt kernel in the **Release** section is compiled from the `android16-aptusitu` branch, and should work on stock MIUI/HyperOS as well as third-party AOSP-based ROMs for Android 11–16.  
-Feedback is welcome (via Issues or Pull Requests)! Coolapk users can join the discussion in [this post](https://www.coolapk.com/feed/67088487), also can join my QQ group, or send me private feedback.  
+The NoKernelSU version supports Magisk and APatch (and their forks).  
 
 Below are some of the key features:  
 1. Support for USB serial drivers (CH340 / FTDI / PL2303 / OTI6858 / TI / SPCP8X5 / QT2 / UPD78F0730 / CP210X)  
@@ -65,17 +62,23 @@ Below are some of the key features:
 4. Support for EROFS  
 5. zRAM with support for multiple compression algorithms, including LZ4, LZ4HC, lz4k_oplus, LZ4KD, and ZSTD  
 6. Backported BPF from Linux 5.10 (Android 16 compatible)  
-7. Touchscreen, camera, audio, GPU/DRM/MSM, and CNSS2 drivers use Xiaomi-specific implementations (sourced from UtsavBalar1231’s repository and MiCode. The AOSP version of the Display/DRM driver is LineageOS version.); also, `double_tap` node has been added to the touchscreen driver  
+7. Touchscreen, camera, audio, GPU/DRM/MSM, and CNSS2 drivers use Xiaomi-specific implementations (sourced from UtsavBalar1231's repository and MiCode. The AOSP version of the Display/DRM driver is LineageOS version.); also, `double_tap` node has been added to the touchscreen driver  
 8. Fixes [the issue where the battery percentage gets stuck at 1%](https://github.com/liyafe1997/Xiaomi-fix-battery-one-percent), and supports recognizing higher-capacity replacement batteries
 9. Integrate [BBG(Baseband-guard)](https://github.com/vc-teahouse/Baseband-guard)  
 
 ---
 
-## 注意事项 / Notes
-**中文:**  
-提示：该内核的 zip 包不包含 `dtbo.img`，并且不会刷你的 dtbo 分区。推荐使用原厂的 `dtbo`，或者来自第三方系统包自带的 dtbo(如果原作者确认那好用的话)。因为该源码 build 出来的 `dtbo.img` 有些小问题，比如在锁屏界面上尝试熄屏时，屏幕会突然闪一下到最高亮度。如果你刷过其它第三方内核，或者遇到一些奇怪的问题，建议检查一下你的 `dtbo` 是否被替换过。  
+## নোট / Notes
+**বাংলা:**  
+**দ্রষ্টব্য**: কার্নেল zip প্যাকেজে `dtbo.img` নেই এবং এটি আপনার dtbo পার্টিশন ফ্ল্যাশ করবে না।  
+স্টক `dtbo` ব্যবহার করার পরামর্শ দেওয়া হয়, অথবা তৃতীয় পক্ষের ROM এর বান্ডেল করা ফাইল থেকে একটি ব্যবহার করুন (যদি মূল লেখক নিশ্চিত করেন যে এটি ভালো কাজ করে)।  
+এই সোর্স থেকে তৈরি `dtbo.img`-এ কিছু সমস্যা আছে—উদাহরণস্বরূপ, লক স্ক্রিনে, স্ক্রিন বন্ধ করার চেষ্টা করার সময় ডিসপ্লে হঠাৎ সর্বোচ্চ উজ্জ্বলতায় ফ্ল্যাশ হতে পারে।  
+যদি আপনি অন্য তৃতীয় পক্ষের কার্নেল ফ্ল্যাশ করে থাকেন বা অদ্ভুত সমস্যার সম্মুখীন হন, তাহলে দয়া করে পরীক্ষা করুন আপনার `dtbo` প্রতিস্থাপিত হয়েছে কিনা।  
 
-**注意：如果你在用 HyperOS/MIUI 请刷 MIUI 的版本，AOSP 版因为 display 驱动不同，在 HyperOS/MIUI 上屏幕无法正常显示，如果刷内核之后开机黑屏，请先检查你是不是正在用着 HyperOS/MIUI 但是刷了 AOSP 版，默认不受理关于这条的反馈。**  
+**সতর্কতা**: যদি আপনি HyperOS/MIUI ব্যবহার করেন, তাহলে দয়া করে **MIUI সংস্করণ** ফ্ল্যাশ করুন।  
+AOSP সংস্করণে ভিন্ন ডিসপ্লে ড্রাইভার রয়েছে, যা HyperOS/MIUI-তে স্ক্রিন সঠিকভাবে প্রদর্শিত হতে দেবে না।  
+ফ্ল্যাশ করার পরে যদি আপনি একটি কালো স্ক্রিন পান, তাহলে পরীক্ষা করুন আপনি HyperOS/MIUI-তে আছেন কিন্তু AOSP সংস্করণ ফ্ল্যাশ করেছেন কিনা।  
+এই নির্দিষ্ট সমস্যা সম্পর্কে প্রতিক্রিয়া ডিফল্টভাবে গ্রহণ করা হবে না।  
 
 **English:**  
 **Note**: The kernel zip package does **not** contain `dtbo.img` and will not flash your dtbo partition.  
@@ -90,17 +93,8 @@ Feedback about this specific issue will not be accepted by default.
 
 ---
 
-## 社区 / Community
-**中文:**  
-欢迎加入 ApartTUSITU's QQ 交流群: [700675046](https://qm.qq.com/q/Md7nXA3Toa)。  
-
-**English:**  
-Join ApartTUSITU's QQ Group: [700675046](https://qm.qq.com/q/Md7nXA3Toa).  
-
----
-
-## 支持的设备 / Supported Devices
-| 设备代号 / Codename  | 设备名称 / Device Name            |
+## সমর্থিত ডিভাইস / Supported Devices
+| ডিভাইস কোডনেম / Codename  | ডিভাইসের নাম / Device Name            |
 |---------------------|-----------------------------------|
 | psyche              | Xiaomi 12X                        |
 | thyme               | Xiaomi 10S                        |
@@ -118,45 +112,45 @@ Join ApartTUSITU's QQ Group: [700675046](https://qm.qq.com/q/Md7nXA3Toa).
 
 ---
 
-## 构建方法 / Build Instructions
+## বিল্ড নির্দেশাবলী / Build Instructions
 
-### 快速构建 / Quick Build
-**中文:**  
-1. fork 本仓库(别忘了点个 Star~)  
-2. 进入 **Actions**  
-3. 如果你要为所有支持的设备编译内核，找到 `Build All Devices Kernel (Matrix Parallel + Release)`，点击 `Run workflow`  
-4. 如果你要为单个设备编译内核，找到 `Build Kernel`， 点击 `Run workflow` 并选择必要内容  
+### দ্রুত বিল্ড / Quick Build
+**বাংলা:**  
+1. এই রিপোজিটরি ফর্ক করুন (একটি স্টার দিতে ভুলবেন না~)  
+2. **Actions** এ যান  
+3. যদি আপনি সব সমর্থিত ডিভাইসের জন্য কার্নেল কম্পাইল করতে চান, তাহলে `Build All Devices Kernel (Matrix Parallel + Release)` খুঁজুন এবং `Run workflow` ক্লিক করুন  
+4. যদি আপনি একটি নির্দিষ্ট ডিভাইসের জন্য কার্নেল কম্পাইল করতে চান, তাহলে `Build Kernel` খুঁজুন, `Run workflow` ক্লিক করুন এবং প্রয়োজনীয় অপশনগুলি নির্বাচন করুন  
 
 **English:**  
-1. Fork this repo (don’t forget to leave a Star~)  
+1. Fork this repo (don't forget to leave a Star~)  
 2. Go to **Actions**  
 3. If you want to compile the kernel for all supported devices, find `Build All Devices Kernel (Matrix Parallel + Release)` and click `Run workflow`  
 4. If you want to compile the kernel for a single device, find `Build Kernel`, click `Run workflow`, and select the necessary options  
 
 ---
 
-### 手动构建 / Manual Build
-**中文:**  
-1. 准备基本构建环境。  
-   需要常用工具链 `git`、`make`、`curl`、`bison`、`flex`、`zip` 等，以及一些软件包。  
-   - 在 Debian/Ubuntu:  
+### ম্যানুয়াল বিল্ড / Manual Build
+**বাংলা:**  
+1. বিল্ড এনভায়রনমেন্ট প্রস্তুত করুন।  
+   আপনার প্রয়োজন `git`, `make`, `curl`, `bison`, `flex`, `zip` ইত্যাদি।  
+   - Debian/Ubuntu-তে:  
    ```
    sudo apt install build-essential git curl wget bison flex zip bc cpio libssl-dev ccache tar
    ```
-   还需要 `python` (仅有 `python3` 不够)，可安装:  
+   আপনার `python`-ও প্রয়োজন (শুধু `python3` যথেষ্ট নয়):  
    ```
    sudo apt install python-is-python3
    ```
 
-   - 在 RHEL/RPM 系统:  
+   - RHEL/RPM-ভিত্তিক OS-এ:  
    ```
    sudo yum groupinstall 'Development Tools'
    sudo yum install wget bc openssl-devel ccache tar
    ```
 
-   注意：`build.sh` 中启用了 `ccache`，路径是 `$HOME/.cache/ccache_mikernel`。可修改或删除。  
+   দ্রষ্টব্য: `build.sh`-এ `ccache` সক্রিয় আছে (`$HOME/.cache/ccache_mikernel`)। আপনি এটি মুছে ফেলতে/পরিবর্তন করতে পারেন।  
 
-2. 下载 [ZyC-Clang v15](https://github.com/ZyCromerZ/Clang/releases/tag/15.0.7-20251111-release) 工具链:  
+2. [ZyC-Clang v15](https://github.com/ZyCromerZ/Clang/releases/tag/15.0.7-20251111-release) টুলচেইন ডাউনলোড করুন:  
    ```
    mkdir zyc-clang
    cd zyc-clang
@@ -165,27 +159,27 @@ Join ApartTUSITU's QQ Group: [700675046](https://qm.qq.com/q/Md7nXA3Toa).
    cd ..
    ```
 
-3. 构建:  
-   - 不使用 KernelSU:  
+3. বিল্ড করুন:  
+   - KernelSU ছাড়া:  
      ```
      bash build.sh TARGET_DEVICE
      ```
-   - 使用 KernelSU:  
+   - KernelSU সহ:  
      ```
      bash build.sh TARGET_DEVICE ksu
      ```
 
-   示例:  
-   - lmi (Redmi K30 Pro/POCO F2 Pro) 不使用 KernelSU:  
+   উদাহরণ:  
+   - lmi (Redmi K30 Pro/POCO F2 Pro) KernelSU ছাড়া:  
      ```
      bash build.sh lmi
      ```
-   - umi (Xiaomi 10) 使用 KernelSU:  
+   - umi (Xiaomi 10) KernelSU সহ:  
      ```
      bash build.sh umi ksu
      ```
 
-   另外，`buildall.sh` 可一次性为所有设备构建。  
+   এছাড়াও, `buildall.sh` একবারে সব ডিভাইসের জন্য বিল্ড করতে পারে।  
 
 **English:**  
 1. Prepare the build environment.  
@@ -236,4 +230,4 @@ Join ApartTUSITU's QQ Group: [700675046](https://qm.qq.com/q/Md7nXA3Toa).
      bash build.sh umi ksu
      ```
 
-   Additionally, `buildall.sh` can build for all supported devices at once.  
+   Additionally, `buildall.sh` can build for all supported devices at once.
