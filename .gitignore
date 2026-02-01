@@ -137,3 +137,6 @@ kernel/configs/android-*.cfg
 out/
 *Zone.Identifier
 security/selinux/*.orig
+
+*.log
+anykernel/kernel/*
