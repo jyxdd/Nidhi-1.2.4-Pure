@@ -8,7 +8,7 @@ set -e
 TOOLCHAIN_PATH=$HOME/zyc-clang/bin
 GIT_COMMIT_ID=$(git rev-parse --short=8 HEAD)
 BUILD_SCRIPT_VERSION='2.0'
-NIDHIKERNEL_VERSION_STR='1.2.4'
+NIDHIKERNEL_VERSION_STR='1.2.5'
 
 # ============================================
 # Print Build Script & NidhiKernel Version
@@ -27,6 +27,7 @@ VERBOSE_MODE=0
 DIRTY_BUILD=0
 JOBS=$(nproc)
 LOG_FILE=""
+LTO_TYPE=""
 
 # Colors for output
 RED=$'\e[0;31m'
@@ -52,6 +53,8 @@ ${BLUE}Options:${NC}
   -J<N>, --jobs <N>
                   Number of parallel jobs (1-$(nproc), default: $(nproc))
   -D, --dirty     Dirty build (don't clean out/ directory)
+  -L, --lto [type]
+                  Enable Link Time Optimization (thin|full|none, default: thin)
   -H, --help      Show this help message
 
 ${BLUE}Examples:${NC}
@@ -123,6 +126,16 @@ for ((i=1; i<=$#; i++)); do
         exit 1
       fi
       ;;
+    -L|--lto)
+      next_index=$((i + 1))
+      lto_val="${!next_index}"
+      if [[ -n "$lto_val" && ! "$lto_val" =~ ^- && ("$lto_val" == "thin" || "$lto_val" == "full" || "$lto_val" == "none") ]]; then
+        LTO_TYPE="$lto_val"
+        skip_next=1
+      else
+        LTO_TYPE="thin"
+      fi
+      ;;
     *)
       positional_args+=("$arg")
       ;;
@@ -152,21 +165,6 @@ if [ -z "$1" ]; then
   echo ""
   show_help
   exit 1
-fi
-
-# ============================================
-# Special commands (kept for backward compatibility)
-# ============================================
-if [ "$1" == "j1" ]; then
-  MAKE_ARGS="ARCH=arm64 SUBARCH=arm64 O=out CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CROSS_COMPILE_COMPAT=arm-linux-gnueabi- CLANG_TRIPLE=aarch64-linux-gnu-"
-  make $MAKE_ARGS -j1
-  exit
-fi
-
-if [ "$1" == "continue" ]; then
-  MAKE_ARGS="ARCH=arm64 SUBARCH=arm64 O=out CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CROSS_COMPILE_COMPAT=arm-linux-gnueabi- CLANG_TRIPLE=aarch64-linux-gnu-"
-  make $MAKE_ARGS -j$(nproc)
-  exit
 fi
 
 # ============================================
@@ -207,7 +205,7 @@ fi
 # Setup Logging
 # ============================================
 mkdir -p ../logs
-LOG_FILE="../logs/build_$(date +'%Y%m%d_%H%M%S').log"
+LOG_FILE="$(pwd)/../logs/build_$(date +'%Y%m%d_%H%M%S').log"
 echo -e "${BLUE}Build log will be saved to: ${LOG_FILE}${NC}"
 echo "Build started at $(date)" > "$LOG_FILE"
 echo "======================================" >> "$LOG_FILE"
@@ -231,6 +229,13 @@ MAKE_ARGS="ARCH=arm64 SUBARCH=arm64 O=out CC=clang CROSS_COMPILE=aarch64-linux-g
 # Add V=1 if verbose mode
 if [ $VERBOSE_MODE -eq 1 ]; then
   MAKE_ARGS="$MAKE_ARGS V=1"
+fi
+
+# Apply LTO-specific toolchain flags if LTO is enabled
+if [ -n "$LTO_TYPE" ]; then
+  # LTO requires LLD linker and LLVM tools
+  # We use explicit tool definitions instead of LLVM=1 to potentially avoid bootloop issues with IAS
+  MAKE_ARGS="$MAKE_ARGS LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip"
 fi
 
 # Check clang is existing.
@@ -276,6 +281,7 @@ echo "Jobs: -j$JOBS"
 echo "Dirty Build: $([ $DIRTY_BUILD -eq 1 ] && echo "Yes (keep out/)" || echo "No (clean build)")"
 echo "Build AOSP: $([ $BUILD_AOSP -eq 1 ] && echo "Yes" || echo "No")"
 echo "Build MIUI: $([ $BUILD_MIUI -eq 1 ] && echo "Yes" || echo "No")"
+echo "LTO Mode: ${LTO_TYPE:-Default}"
 echo "Log File: $LOG_FILE"
 echo -e "${GREEN}======================================${NC}"
 echo ""
@@ -290,6 +296,7 @@ echo ""
   echo "  Dirty Build: $([ $DIRTY_BUILD -eq 1 ] && echo "Yes" || echo "No")"
   echo "  Build AOSP: $([ $BUILD_AOSP -eq 1 ] && echo "Yes" || echo "No")"
   echo "  Build MIUI: $([ $BUILD_MIUI -eq 1 ] && echo "Yes" || echo "No")"
+  echo "  LTO Mode: ${LTO_TYPE:-Default}"
   echo ""
 } >> "$LOG_FILE"
 
@@ -377,9 +384,36 @@ Build_AOSP() {
     -e CONFIG_KALLSYMS \
     -e CONFIG_KALLSYMS_ALL \
     -d CONFIG_LOCALVERSION_AUTO \
+    -d CFI_CLANG \
     --set-str CONFIG_LOCALVERSION "-Nidhi-${NIDHIKERNEL_VERSION_STR}"
   
   echo "AOSP-specific configs applied" >> "$LOG_FILE"
+
+  # Apply LTO configuration if specified
+  if [ -n "$LTO_TYPE" ]; then
+    echo "Applying LTO configuration: $LTO_TYPE" >> "$LOG_FILE"
+    if [ "$LTO_TYPE" == "thin" ]; then
+        scripts/config --file out/.config \
+            -e LTO_CLANG \
+            -e LTO_CLANG_THIN \
+            -e THINLTO \
+            -d LTO_CLANG_FULL \
+            -d LTO_NONE
+    elif [ "$LTO_TYPE" == "full" ]; then
+        scripts/config --file out/.config \
+            -e LTO_CLANG \
+            -d LTO_CLANG_THIN \
+            -d THINLTO \
+            -e LTO_CLANG_FULL \
+            -d LTO_NONE
+    elif [ "$LTO_TYPE" == "none" ]; then
+        scripts/config --file out/.config \
+            -d LTO_CLANG \
+            -d LTO_CLANG_THIN \
+            -d LTO_CLANG_FULL \
+            -e LTO_NONE
+    fi
+  fi
 
   run_make "Compiling kernel (this may take a while)" $MAKE_ARGS -j$JOBS
 
@@ -567,9 +601,36 @@ Build_MIUI() {
     -e CONFIG_KALLSYMS \
     -e CONFIG_KALLSYMS_ALL \
     -d CONFIG_LOCALVERSION_AUTO \
+    -d CFI_CLANG \
     --set-str CONFIG_LOCALVERSION "-Nidhi-${NIDHIKERNEL_VERSION_STR}"
   
   echo "MIUI-specific configs applied" >> "$LOG_FILE"
+
+  # Apply LTO configuration if specified
+  if [ -n "$LTO_TYPE" ]; then
+    echo "Applying LTO configuration: $LTO_TYPE" >> "$LOG_FILE"
+    if [ "$LTO_TYPE" == "thin" ]; then
+        scripts/config --file out/.config \
+            -e LTO_CLANG \
+            -e LTO_CLANG_THIN \
+            -e THINLTO \
+            -d LTO_CLANG_FULL \
+            -d LTO_NONE
+    elif [ "$LTO_TYPE" == "full" ]; then
+        scripts/config --file out/.config \
+            -e LTO_CLANG \
+            -d LTO_CLANG_THIN \
+            -d THINLTO \
+            -e LTO_CLANG_FULL \
+            -d LTO_NONE
+    elif [ "$LTO_TYPE" == "none" ]; then
+        scripts/config --file out/.config \
+            -d LTO_CLANG \
+            -d LTO_CLANG_THIN \
+            -d LTO_CLANG_FULL \
+            -e LTO_NONE
+    fi
+  fi
 
   run_make "Compiling kernel (this may take a while)" $MAKE_ARGS -j$JOBS
 

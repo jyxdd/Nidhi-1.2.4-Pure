@@ -52,6 +52,9 @@ set_language_en() {
     TXT_TITLE_ROM="ROM Type"
     TXT_TITLE_OPTS="Build Options"
     TXT_TITLE_JOBS="Job Count"
+    TXT_TITLE_OPTS="Build Options"
+    TXT_TITLE_JOBS="Job Count"
+    TXT_TITLE_LTO="Link Time Optimization (LTO)"
     TXT_TITLE_SUMMARY="Build Summary"
     
     # Main Menu
@@ -96,7 +99,17 @@ set_language_en() {
     TXT_OPT_JOBS="Custom job count"
     
     TXT_MSG_JOBS="Enter number of parallel jobs (1-$MAX_JOBS):"
+    TXT_MSG_JOBS="Enter number of parallel jobs (1-$MAX_JOBS):"
     TXT_MSG_JOBS_INV="Invalid job count. Using default."
+
+    TXT_MSG_LTO="Select LTO mode:\n\nNote: 'Full' LTO provides maximum optimization but is RISKY and may cause bootloops."
+    TXT_OPT_LTO_THIN="Thin LTO (Default) - Balanced"
+    TXT_OPT_LTO_FULL="Full LTO - Maximum Performance (RISKY)"
+    TXT_OPT_LTO_THIN="Thin LTO (Default) - Balanced"
+    TXT_OPT_LTO_FULL="Full LTO - Maximum Performance (RISKY)"
+    TXT_OPT_LTO_NONE="No LTO - Disabled"
+    TXT_MSG_LTO_WARN_FULL="WARNING: You have selected Full LTO.\n\nThis mode is known to cause bootloops on some devices (e.g., stuck at Mi logo).\n\nAre you sure you want to proceed?"
+    TXT_MSG_LTO_WARN_FULL="WARNING: You have selected Full LTO.\n\nThis mode is known to cause bootloops on some devices (e.g., stuck at Mi logo).\n\nAre you sure you want to proceed?"
     
     # Summary
     TXT_SUM_READY="Ready to build with the following configuration:"
@@ -104,7 +117,9 @@ set_language_en() {
     TXT_SUM_KSU="KernelSU:"
     TXT_SUM_KSU_EN="Enabled (SUSFS)"
     TXT_SUM_KSU_DIS="Disabled"
+    TXT_SUM_KSU_DIS="Disabled"
     TXT_SUM_ROM="ROM Type:"
+    TXT_SUM_LTO="LTO Mode:"
     TXT_SUM_OPTS="Build Options:"
     TXT_SUM_STD="Standard build"
     TXT_SUM_TOTAL="Total builds:"
@@ -121,7 +136,7 @@ set_language_en() {
     TXT_EXEC_FAIL="✗ Build failed for"
     TXT_EXEC_COMPLETE="Build Process Complete"
     TXT_EXEC_ALL_SUCC="SUCCESS: All devices built successfully!"
-    TXT_EXEC_CHECK_OUT="Check the out/ directory for flashable ZIPs:"
+    TXT_EXEC_CHECK_OUT="Check the ../out/ directory for flashable ZIPs:"
     TXT_EXEC_LOGS="Build logs available:"
     TXT_EXEC_ERRORS="COMPLETED WITH ERRORS:"
     TXT_EXEC_FAIL_LIST="Failed builds"
@@ -142,6 +157,9 @@ set_language_bn() {
     TXT_TITLE_ROM="রমের ধরন"
     TXT_TITLE_OPTS="বিল্ড অপশন"
     TXT_TITLE_JOBS="জব সংখ্যা"
+    TXT_TITLE_OPTS="বিল্ড অপশন"
+    TXT_TITLE_JOBS="জব সংখ্যা"
+    TXT_TITLE_LTO="লিঙ্ক টাইম অপ্টিমাইজেশান (LTO)"
     TXT_TITLE_SUMMARY="বিল্ড সারাংশ"
     
     # Main Menu
@@ -187,6 +205,15 @@ set_language_bn() {
     
     TXT_MSG_JOBS="প্যারালাল জবের সংখ্যা লিখুন (১-$MAX_JOBS):"
     TXT_MSG_JOBS_INV="অবৈধ জব সংখ্যা। ডিফল্ট ব্যবহার করা হচ্ছে।"
+
+    TXT_MSG_LTO="LTO মোড নির্বাচন করুন:\n\nদ্রষ্টব্য: 'Full' LTO সর্বাধিক অপ্টিমাইজেশান দেয় তবে এটি ঝুঁকিপূর্ণ এবং বুটলুপের কারণ হতে পারে।"
+    TXT_OPT_LTO_THIN="Thin LTO (ডিফল্ট) - ভারসাম্যপূর্ণ"
+    TXT_OPT_LTO_FULL="Full LTO - সর্বাধিক পারফরম্যান্স (ঝুঁকিপূর্ণ)"
+    TXT_OPT_LTO_THIN="Thin LTO (ডিফল্ট) - ভারসাম্যপূর্ণ"
+    TXT_OPT_LTO_FULL="Full LTO - সর্বাধিক পারফরম্যান্স (ঝুঁকিপূর্ণ)"
+    TXT_OPT_LTO_NONE="LTO নেই - নিষ্ক্রিয়"
+    TXT_MSG_LTO_WARN_FULL="সতর্কতা: আপনি Full LTO নির্বাচন করেছেন।\n\nএই মোডটি কিছু ডিভাইসে বুটলুপের কারণ হিসেবে পরিচিত (যেমন, Mi লোগোতে আটকে থাকা)।\n\nআপনি কি নিশ্চিত যে আপনি এগিয়ে যেতে চান?"
+    TXT_MSG_LTO_WARN_FULL="সতর্কতা: আপনি Full LTO নির্বাচন করেছেন।\n\nএই মোডটি কিছু ডিভাইসে বুটলুপের কারণ হিসেবে পরিচিত (যেমন, Mi লোগোতে আটকে থাকা)।\n\nআপনি কি নিশ্চিত যে আপনি এগিয়ে যেতে চান?"
     
     # Summary
     TXT_SUM_READY="নিম্নলিখিত কনফিগারেশনের সাথে বিল্ড করতে প্রস্তুত:"
@@ -194,7 +221,9 @@ set_language_bn() {
     TXT_SUM_KSU="KernelSU:"
     TXT_SUM_KSU_EN="সক্রিয় (SUSFS)"
     TXT_SUM_KSU_DIS="নিষ্ক্রিয়"
+    TXT_SUM_KSU_DIS="নিষ্ক্রিয়"
     TXT_SUM_ROM="রমের ধরন:"
+    TXT_SUM_LTO="LTO মোড:"
     TXT_SUM_OPTS="বিল্ড অপশন:"
     TXT_SUM_STD="সাধারণ বিল্ড"
     TXT_SUM_TOTAL="মোট বিল্ড:"
@@ -211,7 +240,7 @@ set_language_bn() {
     TXT_EXEC_FAIL="✗ বিল্ড ব্যর্থ হয়েছে:"
     TXT_EXEC_COMPLETE="বিল্ড প্রক্রিয়া সম্পন্ন"
     TXT_EXEC_ALL_SUCC="সফলতা: সব ডিভাইস সফলভাবে বিল্ড হয়েছে!"
-    TXT_EXEC_CHECK_OUT="ফ্ল্যাশযোগ্য জিপগুলির জন্য out/ ডিরেক্টরি চেক করুন:"
+    TXT_EXEC_CHECK_OUT="ফ্ল্যাশযোগ্য জিপগুলির জন্য ../out/ ডিরেক্টরি চেক করুন:"
     TXT_EXEC_LOGS="বিল্ড লগ উপলব্ধ:"
     TXT_EXEC_ERRORS="ত্রুটিসহ সম্পন্ন হয়েছে:"
     TXT_EXEC_FAIL_LIST="ব্যর্থ বিল্ড"
@@ -338,7 +367,6 @@ Features:
 The underlying build script supports:
 - Automatic build logging
 - Error detection and reporting
-- KPM patching for SukiSU
 - MIUI-specific DTS patches
 - CONFIG_LOCALVERSION configuration
 
@@ -535,6 +563,45 @@ select_build_options() {
     return 0
 }
 
+# Function to select LTO mode
+select_lto() {
+    while true; do
+        dialog --title "$TXT_TITLE_LTO" --menu \
+"$TXT_MSG_LTO" 15 60 4 \
+1 "$TXT_OPT_LTO_THIN" \
+2 "$TXT_OPT_LTO_FULL" \
+3 "$TXT_OPT_LTO_NONE" \
+4 "$TXT_OPT_CANCEL" 2> $TEMP_FILE
+
+        local choice=$(cat $TEMP_FILE)
+        case $choice in
+            1)
+                LTO_FLAG="--lto thin"
+                LTO_DISPLAY="$TXT_OPT_LTO_THIN"
+                return 0
+                ;;
+            2)
+                # Show warning for Full LTO
+                dialog --title "$TXT_TITLE_WARNING" --yesno "$TXT_MSG_LTO_WARN_FULL" 12 60
+                if [ $? -eq 0 ]; then
+                    LTO_FLAG="--lto full"
+                    LTO_DISPLAY="$TXT_OPT_LTO_FULL"
+                    return 0
+                fi
+                # If they say no, loop back to menu
+                ;;
+            3)
+                LTO_FLAG="--lto none"
+                LTO_DISPLAY="$TXT_OPT_LTO_NONE"
+                return 0
+                ;;
+            4|"")
+                return 1
+                ;;
+        esac
+    done
+}
+
 # Function to show build summary
 show_build_summary() {
     local devices_list=$(echo "$SELECTED_DEVICES" | tr ' ' '\n' | sed 's/^/  • /')
@@ -559,7 +626,9 @@ $TXT_SUM_DEVS
 $devices_list
 
 $TXT_SUM_KSU $ksu_status
+$TXT_SUM_KSU $ksu_status
 $TXT_SUM_ROM $rom_type_text
+$TXT_SUM_LTO $LTO_DISPLAY
 
 $TXT_SUM_OPTS
 $options_text
@@ -600,7 +669,10 @@ execute_builds() {
         # Build command
         local cmd="bash $BUILD_SCRIPT $device"
         [ -n "$KSU_OPTION" ] && cmd="$cmd $KSU_OPTION"
+        local cmd="bash $BUILD_SCRIPT $device"
+        [ -n "$KSU_OPTION" ] && cmd="$cmd $KSU_OPTION"
         [ -n "$ROM_TYPE" ] && cmd="$cmd $ROM_TYPE"
+        [ -n "$LTO_FLAG" ] && cmd="$cmd $LTO_FLAG"
         [ -n "$VERBOSE_FLAG" ] && cmd="$cmd $VERBOSE_FLAG"
         [ -n "$DIRTY_FLAG" ] && cmd="$cmd $DIRTY_FLAG"
         [ -n "$JOBS_FLAG" ] && cmd="$cmd $JOBS_FLAG"
@@ -637,7 +709,7 @@ execute_builds() {
         echo ""
         echo "$TXT_EXEC_CHECK_OUT"
         for device in $SELECTED_DEVICES; do
-            echo "  - out/$device/"
+            echo "  - ../out/$device/"
         done
         echo ""
         echo "$TXT_EXEC_LOGS build_*.log"
@@ -688,11 +760,13 @@ main_menu() {
                 if select_devices; then
                     if select_ksu; then
                         if select_rom_type; then
-                            if select_build_options; then
-                                if show_build_summary; then
-                                    # Execute builds - this will show builds in terminal
-                                    execute_builds
-                                    # After builds complete and user presses enter, return to menu
+                            if select_lto; then
+                                if select_build_options; then
+                                    if show_build_summary; then
+                                        # Execute builds - this will show builds in terminal
+                                        execute_builds
+                                        # After builds complete and user presses enter, return to menu
+                                    fi
                                 fi
                             fi
                         fi
