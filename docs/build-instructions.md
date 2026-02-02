@@ -33,6 +33,12 @@ A comprehensive kernel build script with logging, verbose mode, custom job contr
 - Examples for common scenarios
 - Always up-to-date documentation
 
+### 6. **Link Time Optimization (LTO) Support**
+- Optimize kernel binary for performance
+- Supports **Thin LTO** (default, balanced)
+- Supports **Full LTO** (max performance, potentially unstable)
+- Option to disable with `none`
+
 ---
 
 ## Prerequisites
@@ -93,6 +99,7 @@ bash build.sh <device> [ksu] [aosp|miui] [OPTIONS]
 | --verbose | -V | Verbose build (V=1) | `-V` |
 | --jobs <N> | -J<N> | Parallel jobs (1-nproc) | `-J8`, `--jobs 12` |
 | --dirty | -D | Keep out/ directory | `-D` |
+| --lto [type] | -L | LTO mode (thin, full, none) | `--lto thin`, `-L full` |
 | --help | -H | Show help | `-H` |
 
 ---
@@ -130,6 +137,11 @@ bash build.sh lmi --dirty
 
 # Combined options
 bash build.sh lmi ksu -V -J8 -D
+
+# With LTO
+bash build.sh lmi --lto thin     # Default
+bash build.sh lmi --lto full     # Full LTO
+bash build.sh lmi --lto none     # Disable LTO
 ```
 
 ### Advanced Examples
@@ -333,7 +345,42 @@ bash build.sh --help
 - Complete syntax
 - All arguments and options
 - Usage examples
+- Usage examples
 - Important notes
+
+### 6. Link Time Optimization (-L, --lto)
+
+**What is LTO?**
+Link Time Optimization allows the compiler to optimize across module boundaries, resulting in a potentially faster and more efficient kernel.
+
+**Modes:**
+- **Thin LTO (`thin`)**: [DEFAULT]
+    - Good balance between build time and performance.
+    - Uses less memory than Full LTO.
+    - Recommended for most users.
+
+- **Full LTO (`full`)**:
+    - Maximum possible performance optimization.
+    - Takes significantly longer to build.
+    - Uses a lot more RAM.
+    - **WARNING**: Known to cause bootloops on some devices (e.g., stuck at splash screen).
+
+- **No LTO (`none`)**:
+    - Disables LTO entirely.
+    - Fastest build time.
+    - Useful for debugging or if LTO is causing issues.
+
+**Usage:**
+```bash
+# Explicitly use Thin LTO
+bash build.sh lmi --lto thin
+
+# Use Full LTO (Caution!)
+bash build.sh lmi --lto full
+
+# Disable LTO
+bash build.sh lmi --lto none
+```
 
 ---
 
@@ -578,6 +625,7 @@ grep -i "undefined reference" build_*.log
 | Help | Basic | Comprehensive `-H` |
 | Error Handling | Exit on error | Stop + log file message |
 | Build Tracking | None | Timestamped logs |
+| LTO Support | Manual config | `--lto [thin|full|none]` |
 
 ---
 
@@ -594,6 +642,9 @@ grep -i "undefined reference" build_*.log
 | Verbose | `bash build.sh lmi -V` |
 | 8 jobs | `bash build.sh lmi -J8` |
 | Dirty build | `bash build.sh lmi -D` |
+| Thin LTO | `bash build.sh lmi --lto thin` |
+| Full LTO | `bash build.sh lmi --lto full` |
+| No LTO | `bash build.sh lmi --lto none` |
 | All options | `bash build.sh lmi ksu aosp -V -J8 -D` |
 | Help | `bash build.sh -H` |
 

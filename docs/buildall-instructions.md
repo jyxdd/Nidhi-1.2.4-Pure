@@ -24,6 +24,7 @@ A user-friendly ncurses-based interface for the kernel build script.
 ### Complete Build Control
 - KernelSU enable/disable toggle
 - ROM type selection (AOSP/MIUI/Both)
+- LTO Mode selection (Thin/Full)
 - Verbose mode toggle
 - Dirty build support
 - Custom job count configuration
@@ -128,19 +129,25 @@ Select the target ROM type:
 - **AOSP only**: Generates one ZIP file per device.
 - **MIUI only**: Generates one ZIP file per device.
 
-### Step 4: Build Options
+### Step 4: LTO Selection
+Select the Link Time Optimization mode:
+- **Thin LTO (Default)**: Balanced performance and build time. Recommended.
+- **Full LTO**: Maximum performance, but **RISKY**. May cause bootloops (e.g., stuck at Mi logo) on some devices. Use with caution.
+- **No LTO**: Disables LTO.
+
+### Step 5: Build Options
 Configure additional build parameters:
 - **Verbose mode (-V)**: Enables detailed output.
 - **Dirty build (-D)**: Skips cleaning the output directory.
 - **Custom job count**: Allows specifying the number of parallel jobs.
 
-### Step 5: Build Summary
+### Step 6: Build Summary
 Review the selected configuration. Confirm to proceed with the build process.
 
-### Step 6: Build Execution
+### Step 7: Build Execution
 The script will execute builds sequentially for each selected device. Full build output is displayed for monitoring.
 
-### Step 7: Completion
+### Step 8: Completion
 Upon completion, a summary of successful and failed builds is displayed. Build logs are saved as `build_*.log`, and flashable ZIP files are located in the `out/` directory.
 
 ---
