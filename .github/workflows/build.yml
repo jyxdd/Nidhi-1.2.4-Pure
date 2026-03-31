@@ -19,7 +19,7 @@ jobs:
     - name: Checkout Source
       uses: actions/checkout@v4
       with:
-        fetch-depth: 1 # 純淨編譯，不需要完整歷史
+        fetch-depth: 1 
 
     - name: Cleanup & Dependencies
       run: |
@@ -35,15 +35,22 @@ jobs:
 
     - name: Fix Baseband-guard Path
       run: |
-        # 依然保留這個，因為你的源碼裡有軟連結指向 ../Baseband-guard
         cd ..
         git clone https://github.com/vc-teahouse/Baseband-guard.git Baseband-guard
         cd -
 
+    # === 在這裡插入：修復 AnyKernel3 404 問題 ===
+    - name: Prepare AnyKernel3
+      run: |
+        # 刪除倉庫中那個失效的子模組連結/資料夾
+        rm -rf anykernel
+        # 重新抓取你指定的正確倉庫
+        git clone https://github.com/liyafe1997/AnyKernel3.git anykernel
+        echo "AnyKernel3 prepared from liyafe1997"
+
     - name: Build Kernel
       run: |
         chmod +x build.sh
-        # 直接執行，不再傳遞 ksu 參數
         ./build.sh ${{ inputs.device }}
 
     - name: Upload Artifacts
