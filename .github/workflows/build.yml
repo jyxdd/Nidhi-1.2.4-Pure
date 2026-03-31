@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       device:
-        description: 'Target Device Codename (e.g., lmi, umi)'
+        description: 'Target Device Codename'
         required: true
-        default: 'lmi'
+        default: 'munch'
         type: choice
         options:
           - psyche
@@ -30,62 +30,51 @@ on:
 
 jobs:
   build:
-    name: Build Kernel for ${{ inputs.device }} (${{ ( github.event.inputs.ksu == 'true' && 'KSU' ) || 'NoKSU' }})
+    name: Build Kernel for ${{ inputs.device }} (${{ ( inputs.ksu == true && 'KSU' ) || 'NoKSU' }})
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout Source
-      uses: actions/checkout@v6
+      uses: actions/checkout@v4
       with:
-        fetch-depth: 1 # 需要完整的 commit 历史来生成版本号
+        fetch-depth: 0 # 獲取完整歷史以支持版本號生成
 
     - name: Cleanup Disk Space
-      # 内核编译不需要特别大的空间，但为了保险起见，清理一些预装软件
       run: |
-        sudo rm -rf /usr/share/dotnet
-        sudo rm -rf /opt/ghc
-        sudo rm -rf "/usr/local/share/boost"
-        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+        sudo rm -rf /usr/share/dotnet /opt/ghc "/usr/local/share/boost" "$AGENT_TOOLSDIRECTORY"
 
     - name: Install Dependencies
-      # 对应 README 中的手动构建依赖
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential git curl wget bison flex zip bc cpio libssl-dev ccache python-is-python3
-        sudo apt-get install -y gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
-
-    - name: Setup Cache (ccache)
-      uses: actions/cache@v5
-      with:
-        path: ~/.cache/ccache_mikernel
-        key: kernel-ccache-${{ inputs.device }}-${{ github.run_id }}
-        restore-keys: |
-          kernel-ccache-${{ inputs.device }}-
-          kernel-ccache-
+        sudo apt-get install -y build-essential git curl wget bison flex zip bc cpio libssl-dev ccache python-is-python3 gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
 
     - name: Setup Toolchain (ZyC-Clang 15)
-      # 对应 Manual Build 第 2 步
       run: |
         mkdir -p $HOME/zyc-clang
         cd $HOME/zyc-clang
         wget -q https://github.com/ZyCromerZ/Clang/releases/download/15.0.7-20251111-release/Clang-15.0.7-20251111.tar.gz
         tar -zxvf Clang-15.0.7-20251111.tar.gz
 
+    # 關鍵步驟：同步守護程序倉庫到上一層目錄，滿足軟連結需求
+    - name: Checkout Baseband-guard
+      run: |
+        cd ..
+        git clone https://github.com/vc-teahouse/Baseband-guard.git Baseband-guard
+
     - name: Build Kernel
       run: |
         chmod +x build.sh
-        
         if [ "${{ inputs.ksu }}" == "true" ]; then
-          echo "Building with KernelSU..."
-          bash build.sh ${{ inputs.device }} ksu
+          ./build.sh ${{ inputs.device }} ksu
         else
-          echo "Building without KernelSU..."
-          bash build.sh ${{ inputs.device }}
+          ./build.sh ${{ inputs.device }}
         fi
 
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v4
       with:
-        name: Kernel-${{ inputs.device }}-${{ ( github.event.inputs.ksu == 'true' && 'KSU' ) || 'NoKSU' }}-${{ github.run_number }}
-        path: ./*.zip
+        name: Kernel-${{ inputs.device }}-${{ ( inputs.ksu == true && 'KSU' ) || 'NoKSU' }}-${{ github.run_number }}
+        path: |
+          output/zip/*.zip
+          output/logs/*.log
         if-no-files-found: error
