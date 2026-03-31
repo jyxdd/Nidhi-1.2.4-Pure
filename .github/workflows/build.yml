@@ -1,4 +1,4 @@
-name: Build Kernel
+name: Build Kernel (Pure)
 
 on:
   workflow_dispatch:
@@ -9,11 +9,6 @@ on:
         default: 'munch'
         type: choice
         options: [psyche, thyme, umi, munch, lmi, cmi, cas, apollo, alioth, elish, enuma, dagu, pipa]
-      ksu:
-        description: 'Enable KernelSU'
-        required: true
-        type: boolean
-        default: true
 
 jobs:
   build:
@@ -24,12 +19,11 @@ jobs:
     - name: Checkout Source
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0
-        # 關鍵：這會把 KernelSU-Next 裡的代碼真正下載下來
-        submodules: recursive
+        fetch-depth: 1 # 純淨編譯，不需要完整歷史
 
-    - name: Install Dependencies
+    - name: Cleanup & Dependencies
       run: |
+        sudo rm -rf /usr/share/dotnet /opt/ghc "/usr/local/share/boost" "$AGENT_TOOLSDIRECTORY"
         sudo apt-get update
         sudo apt-get install -y build-essential git curl wget bison flex zip bc cpio libssl-dev ccache python-is-python3 gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
 
@@ -39,34 +33,23 @@ jobs:
         wget -q https://github.com/ZyCromerZ/Clang/releases/download/15.0.7-20251111-release/Clang-15.0.7-20251111.tar.gz
         tar -zxvf Clang-15.0.7-20251111.tar.gz -C $HOME/zyc-clang
 
-    - name: Fix Paths for CI
+    - name: Fix Baseband-guard Path
       run: |
-        # 解決 KernelSU 名稱不匹配問題
-        if [ -d "drivers/KernelSU-Next" ]; then
-          ln -sf KernelSU-Next drivers/kernelsu
-          echo "Fixed KernelSU directory link"
-        fi
-        
-        # 解決 Baseband-guard 軟連接問題
-        # 既然截圖顯示它在倉庫根目錄，我們在上一層建個連結指向它即可
+        # 依然保留這個，因為你的源碼裡有軟連結指向 ../Baseband-guard
         cd ..
-        ln -sf ${{ github.event.repository.name }}/Baseband-guard Baseband-guard
+        git clone https://github.com/vc-teahouse/Baseband-guard.git Baseband-guard
         cd -
-        echo "Fixed Baseband-guard path link"
 
     - name: Build Kernel
       run: |
         chmod +x build.sh
-        if [ "${{ inputs.ksu }}" == "true" ]; then
-          ./build.sh ${{ inputs.device }} ksu
-        else
-          ./build.sh ${{ inputs.device }}
-        fi
+        # 直接執行，不再傳遞 ksu 參數
+        ./build.sh ${{ inputs.device }}
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: Kernel-${{ inputs.device }}-${{ github.run_number }}
+        name: Kernel-${{ inputs.device }}-Pure
         path: |
           output/zip/*.zip
           output/logs/*.log
