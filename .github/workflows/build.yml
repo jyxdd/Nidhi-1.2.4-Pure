@@ -8,58 +8,51 @@ on:
         required: true
         default: 'munch'
         type: choice
-        options:
-          - psyche
-          - thyme
-          - umi
-          - munch
-          - lmi
-          - cmi
-          - cas
-          - apollo
-          - alioth
-          - elish
-          - enuma
-          - dagu
-          - pipa
+        options: [psyche, thyme, umi, munch, lmi, cmi, cas, apollo, alioth, elish, enuma, dagu, pipa]
       ksu:
-        description: 'Enable KernelSU (SukiSU & SUSFS)'
+        description: 'Enable KernelSU'
         required: true
         type: boolean
         default: true
 
 jobs:
   build:
-    name: Build Kernel for ${{ inputs.device }} (${{ ( inputs.ksu == true && 'KSU' ) || 'NoKSU' }})
+    name: Build Kernel for ${{ inputs.device }}
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout Source
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0 # 獲取完整歷史以支持版本號生成
-
-    - name: Cleanup Disk Space
-      run: |
-        sudo rm -rf /usr/share/dotnet /opt/ghc "/usr/local/share/boost" "$AGENT_TOOLSDIRECTORY"
+        fetch-depth: 0
+        # 關鍵：這會把 KernelSU-Next 裡的代碼真正下載下來
+        submodules: recursive
 
     - name: Install Dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y build-essential git curl wget bison flex zip bc cpio libssl-dev ccache python-is-python3 gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
 
-    - name: Setup Toolchain (ZyC-Clang 15)
+    - name: Setup Toolchain
       run: |
         mkdir -p $HOME/zyc-clang
-        cd $HOME/zyc-clang
         wget -q https://github.com/ZyCromerZ/Clang/releases/download/15.0.7-20251111-release/Clang-15.0.7-20251111.tar.gz
-        tar -zxvf Clang-15.0.7-20251111.tar.gz
+        tar -zxvf Clang-15.0.7-20251111.tar.gz -C $HOME/zyc-clang
 
-    # 關鍵步驟：同步守護程序倉庫到上一層目錄，滿足軟連結需求
-    - name: Checkout Baseband-guard
+    - name: Fix Paths for CI
       run: |
+        # 解決 KernelSU 名稱不匹配問題
+        if [ -d "drivers/KernelSU-Next" ]; then
+          ln -sf KernelSU-Next drivers/kernelsu
+          echo "Fixed KernelSU directory link"
+        fi
+        
+        # 解決 Baseband-guard 軟連接問題
+        # 既然截圖顯示它在倉庫根目錄，我們在上一層建個連結指向它即可
         cd ..
-        git clone https://github.com/vc-teahouse/Baseband-guard.git Baseband-guard
+        ln -sf ${{ github.event.repository.name }}/Baseband-guard Baseband-guard
+        cd -
+        echo "Fixed Baseband-guard path link"
 
     - name: Build Kernel
       run: |
@@ -73,8 +66,7 @@ jobs:
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: Kernel-${{ inputs.device }}-${{ ( inputs.ksu == true && 'KSU' ) || 'NoKSU' }}-${{ github.run_number }}
+        name: Kernel-${{ inputs.device }}-${{ github.run_number }}
         path: |
           output/zip/*.zip
           output/logs/*.log
-        if-no-files-found: error
