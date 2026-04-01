@@ -39,9 +39,10 @@ build_variant() {
   local log_file="$LOG_DIR/build_${TARGET_DEVICE}_${mode}.log"
   echo "--- Starting Build for $mode ---"
   
-  # 清理舊緩存
+  # === 核心修復：預先建立輸出目錄，防止配置注入時找不到路徑 ===
   rm -rf out/
-  
+  mkdir -p out
+
   # 1. 生成配置
   make $MAKE_ARGS ${TARGET_DEVICE}_defconfig 2>&1 | tee -a "$log_file"
   
@@ -66,6 +67,9 @@ build_variant() {
     zip -r9 "$ZIP_NAME" ./* -x .git .gitignore out/ ./*.zip
     mv "$ZIP_NAME" "$ZIP_OUT_DIR/"
     cd ..
+
+    # 完成後清理，釋放硬碟空間給下一個版本
+    rm -rf out/
   else
     echo "Error: Kernel Image not found for $mode!"
     exit 1
