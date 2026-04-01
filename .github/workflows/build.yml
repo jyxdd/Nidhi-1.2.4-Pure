@@ -1,79 +1,69 @@
-#!/bin/bash
-set -e
+name: Build Kernel (Pure)
 
-# ============================================
-# 路徑配置 (雲端優化)
-# ============================================
-OUTPUT_DIR="$(pwd)/output"
-LOG_DIR="$OUTPUT_DIR/logs"
-ZIP_OUT_DIR="$OUTPUT_DIR/zip"
-mkdir -p "$LOG_DIR" "$ZIP_OUT_DIR"
+on:
+  workflow_dispatch:
+    inputs:
+      device:
+        description: 'Target Device Codename'
+        required: true
+        default: 'munch'
+        type: choice
+        options: [psyche, thyme, umi, munch, lmi, cmi, cas, apollo, alioth, elish, enuma, dagu, pipa]
 
-TOOLCHAIN_PATH=$HOME/zyc-clang/bin
-export PATH="$TOOLCHAIN_PATH:$PATH"
+jobs:
+  build:
+    name: Build Kernel for ${{ inputs.device }}
+    runs-on: ubuntu-latest
 
-TARGET_DEVICE=$1
-JOBS=$(nproc)
+    steps:
+    - name: Checkout Source
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1 
 
-if [ -z "$TARGET_DEVICE" ]; then
-  echo "Error: Device codename not specified!"
-  exit 1
-fi
+    - name: Cleanup & Dependencies
+      run: |
+        sudo rm -rf /usr/share/dotnet /opt/ghc "/usr/local/share/boost" "$AGENT_TOOLSDIRECTORY"
+        sudo apt-get update
+        sudo apt-get install -y build-essential git curl wget bison flex zip bc cpio libssl-dev ccache python-is-python3 gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
 
-# ============================================
-# 編譯參數 (已加入自定義簽名)
-# ============================================
-MAKE_ARGS="ARCH=arm64 \
-SUBARCH=arm64 \
-O=out \
-CC=clang \
-CROSS_COMPILE=aarch64-linux-gnu- \
-CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-CROSS_COMPILE_COMPAT=arm-linux-gnueabi- \
-CLANG_TRIPLE=aarch64-linux-gnu- \
-KBUILD_BUILD_USER=jyxdd \
-KBUILD_BUILD_HOST=Nidhi-CI"
+    # === 最佳位置：在編譯前禁用 Git 版本後綴 ===
+    - name: Disable Git SCM version suffix
+      run: |
+        touch .scmversion
+        echo "Created .scmversion to prevent git hash suffix"
 
-build_variant() {
-  local mode=$1
-  local log_file="$LOG_DIR/build_${TARGET_DEVICE}_${mode}.log"
-  echo "--- Starting Build for $mode ---"
-  
-  # 清理舊緩存
-  rm -rf out/
-  
-  # 1. 生成配置
-  make $MAKE_ARGS ${TARGET_DEVICE}_defconfig 2>&1 | tee -a "$log_file"
-  
-  # 2. 強制關閉 KSU/SUSFS 配置並設置純淨版本號
-  ./scripts/config --file out/.config -d KSU -d KSU_SUSFS
-  ./scripts/config --file out/.config --set-str CONFIG_LOCALVERSION "-Nidhi-Pure"
-  ./scripts/config --file out/.config -d CONFIG_LOCALVERSION_AUTO
+    - name: Setup Toolchain
+      run: |
+        mkdir -p $HOME/zyc-clang
+        wget -q https://github.com/ZyCromerZ/Clang/releases/download/15.0.7-20251111-release/Clang-15.0.7-20251111.tar.gz
+        tar -zxvf Clang-15.0.7-20251111.tar.gz -C $HOME/zyc-clang
 
-  # 3. 開始編譯
-  make $MAKE_ARGS -j$JOBS 2>&1 | tee -a "$log_file"
-  
-  # 4. 打包 ZIP
-  if [ -f out/arch/arm64/boot/Image ]; then
-    echo "Kernel compiled successfully! Packing..."
-    find out/arch/arm64/boot/dts -name '*.dtb' -exec cat {} + > out/arch/arm64/boot/dtb
-    rm -rf anykernel/kernels/ && mkdir -p anykernel/kernels/
-    cp out/arch/arm64/boot/Image anykernel/kernels/
-    cp out/arch/arm64/boot/dtb anykernel/kernels/
+    - name: Fix Baseband-guard Path
+      run: |
+        cd ..
+        git clone https://github.com/vc-teahouse/Baseband-guard.git Baseband-guard
+        cd -
+        # 建立軟連結確保 Kconfig 能找到路徑
+        rm -rf security/baseband-guard
+        mkdir -p security
+        ln -sf ../../Baseband-guard security/baseband-guard
 
-    cd anykernel
-    ZIP_NAME="NidhiKernel_${TARGET_DEVICE}_${mode}_Pure.zip"
-    zip -r9 "$ZIP_NAME" ./* -x .git .gitignore out/ ./*.zip
-    mv "$ZIP_NAME" "$ZIP_OUT_DIR/"
-    cd ..
-  else
-    echo "Error: Kernel Image not found for $mode!"
-    exit 1
-  fi
-}
+    - name: Prepare AnyKernel3
+      run: |
+        rm -rf anykernel
+        git clone https://github.com/liyafe1997/AnyKernel3.git anykernel
+        echo "AnyKernel3 prepared from liyafe1997"
 
-# 執行編譯流程
-build_variant "AOSP"
-build_variant "MIUI"
+    - name: Build Kernel
+      run: |
+        chmod +x build.sh
+        ./build.sh ${{ inputs.device }}
 
-echo "Build Process Completed!"
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: Kernel-${{ inputs.device }}-Pure
+        path: |
+          output/zip/*.zip
+          output/logs/*.log
