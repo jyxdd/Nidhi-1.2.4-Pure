@@ -19,6 +19,8 @@ jobs:
     - name: Checkout Source
       uses: actions/checkout@v4
       with:
+        # 強制鎖定 LTO 分支，防止 GitHub Actions 默認拉取 main
+        ref: pure-1.2.4-thinlto
         fetch-depth: 1 
 
     - name: Cleanup & Dependencies
@@ -52,6 +54,16 @@ jobs:
       run: |
         rm -rf anykernel
         git clone https://github.com/liyafe1997/AnyKernel3.git anykernel
+
+    # 建議增加一個驗證步驟，確保拉取到的 build.sh 確實包含 LTO 邏輯
+    - name: Verify LTO Logic
+      run: |
+        if grep -q "CONFIG_THINLTO" build.sh; then
+          echo "✅ Checked: LTO logic is present in build.sh"
+        else
+          echo "❌ Error: LTO logic missing! Check your branch."
+          exit 1
+        fi
 
     - name: Build Kernel
       run: |
