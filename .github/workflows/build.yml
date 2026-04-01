@@ -1,4 +1,4 @@
-name: Build Kernel (Pure)
+name: Build Kernel (Pure-ThinLTO)
 
 on:
   workflow_dispatch:
@@ -27,7 +27,6 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential git curl wget bison flex zip bc cpio libssl-dev ccache python-is-python3 gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
 
-    # === 最佳位置：在編譯前禁用 Git 版本後綴 ===
     - name: Disable Git SCM version suffix
       run: |
         touch .scmversion
@@ -41,36 +40,44 @@ jobs:
 
     - name: Fix Baseband-guard Path
       run: |
-        # 使用環境變數確保路徑 100% 正確
-        # 在工作目錄的同級目錄克隆外部倉庫
         cd ${GITHUB_WORKSPACE}/..
         git clone https://github.com/vc-teahouse/Baseband-guard.git Baseband-guard
-        
-        # 回到你的內核源碼主目錄
         cd ${GITHUB_WORKSPACE}
-        
-        # 清理並重建軟連結，指向剛才克隆的絕對路徑
         rm -rf security/baseband-guard
         mkdir -p security
         ln -sf ${GITHUB_WORKSPACE}/../Baseband-guard security/baseband-guard
-        
-        echo "✅ Baseband-guard 外部鏈接已鎖定，路徑正確。"
+        echo "✅ Baseband-guard path fixed."
 
     - name: Prepare AnyKernel3
       run: |
         rm -rf anykernel
         git clone https://github.com/liyafe1997/AnyKernel3.git anykernel
-        echo "AnyKernel3 prepared from liyafe1997"
 
     - name: Build Kernel
       run: |
+        # 僅在此處注入 ThinLTO 必須的 LLVM 工具鏈參數
+        export MAKE_ARGS="ARCH=arm64 \
+        SUBARCH=arm64 \
+        CC=clang \
+        LD=ld.lld \
+        AR=llvm-ar \
+        NM=llvm-nm \
+        OBJCOPY=llvm-objcopy \
+        OBJDUMP=llvm-objdump \
+        STRIP=llvm-strip \
+        LLVM=1 \
+        LLVM_IAS=1 \
+        CROSS_COMPILE=aarch64-linux-gnu- \
+        CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+        CLANG_TRIPLE=aarch64-linux-gnu-"
+        
         chmod +x build.sh
         ./build.sh ${{ inputs.device }}
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: Kernel-${{ inputs.device }}-Pure
+        name: Kernel-${{ inputs.device }}-Pure-LTO
         path: |
           output/zip/*.zip
           output/logs/*.log
