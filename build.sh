@@ -2,7 +2,7 @@
 set -e
 
 # ============================================
-# 路徑配置 (雲端優化)
+# 路徑配置 (保持不變)
 # ============================================
 OUTPUT_DIR="$(pwd)/output"
 LOG_DIR="$OUTPUT_DIR/logs"
@@ -15,45 +15,37 @@ export PATH="$TOOLCHAIN_PATH:$PATH"
 TARGET_DEVICE=$1
 JOBS=$(nproc)
 
-if [ -z "$TARGET_DEVICE" ]; then
-  echo "Error: Device codename not specified!"
-  exit 1
-fi
-
-# ============================================
-# 編譯參數 (已加入自定義簽名)
-# ============================================
-MAKE_ARGS="ARCH=arm64 \
-SUBARCH=arm64 \
-O=out \
-CC=clang \
-CROSS_COMPILE=aarch64-linux-gnu- \
-CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-CROSS_COMPILE_COMPAT=arm-linux-gnueabi- \
-CLANG_TRIPLE=aarch64-linux-gnu- \
-KBUILD_BUILD_USER=jyxdd \
-KBUILD_BUILD_HOST=Nidhi-CI"
+# MAKE_ARGS 由 yml 傳入環境變量，此處不再重複定義以防衝突
+# 但為了腳本獨立運行，保留基礎參數
+[ -z "$MAKE_ARGS" ] && MAKE_ARGS="ARCH=arm64 SUBARCH=arm64 O=out CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-"
 
 build_variant() {
   local mode=$1
   local log_file="$LOG_DIR/build_${TARGET_DEVICE}_${mode}.log"
-  echo "--- Starting Build for $mode ---"
+  echo "--- Starting ThinLTO Build for $mode ---"
   
-  # 清理舊緩存
   rm -rf out/
   
   # 1. 生成配置
   make $MAKE_ARGS ${TARGET_DEVICE}_defconfig 2>&1 | tee -a "$log_file"
   
-  # 2. 強制關閉 KSU/SUSFS 配置並設置純淨版本號
+  # === 僅新增：ThinLTO 核心配置注入 ===
+  ./scripts/config --file out/.config -e CONFIG_LTO_CLANG
+  ./scripts/config --file out/.config -d CONFIG_LTO_NONE
+  ./scripts/config --file out/.config -e CONFIG_THINLTO
+  
+  # 2. 原有配置保持不變
   ./scripts/config --file out/.config -d KSU -d KSU_SUSFS
-  ./scripts/config --file out/.config --set-str CONFIG_LOCALVERSION "-Nidhi-Pure"
+  ./scripts/config --file out/.config --set-str CONFIG_LOCALVERSION "-Nidhi-Pure-LTO"
   ./scripts/config --file out/.config -d CONFIG_LOCALVERSION_AUTO
 
-  # 3. 開始編譯
+  # === 僅新增：同步 ThinLTO 配置依賴 ===
+  make $MAKE_ARGS olddefconfig 2>&1 | tee -a "$log_file"
+
+  # 3. 開始編譯 (ThinLTO 鏈接時間較長，請耐心等待)
   make $MAKE_ARGS -j$JOBS 2>&1 | tee -a "$log_file"
   
-  # 4. 打包 ZIP
+  # 4. 打包 ZIP (保持原有邏輯)
   if [ -f out/arch/arm64/boot/Image ]; then
     echo "Kernel compiled successfully! Packing..."
     find out/arch/arm64/boot/dts -name '*.dtb' -exec cat {} + > out/arch/arm64/boot/dtb
@@ -62,7 +54,7 @@ build_variant() {
     cp out/arch/arm64/boot/dtb anykernel/kernels/
 
     cd anykernel
-    ZIP_NAME="NidhiKernel_${TARGET_DEVICE}_${mode}_Pure.zip"
+    ZIP_NAME="NidhiKernel_${TARGET_DEVICE}_${mode}_Pure_LTO.zip"
     zip -r9 "$ZIP_NAME" ./* -x .git .gitignore out/ ./*.zip
     mv "$ZIP_NAME" "$ZIP_OUT_DIR/"
     cd ..
@@ -72,7 +64,6 @@ build_variant() {
   fi
 }
 
-# 執行編譯流程
 build_variant "AOSP"
 build_variant "MIUI"
 
