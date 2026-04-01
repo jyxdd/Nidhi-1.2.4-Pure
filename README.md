@@ -1,10 +1,10 @@
-### NidhiKernel 1.2.4 for xiaomi sm8250 devices. 「Pure、NoKsu、ThinLto」
+# NidhiKernel 1.2.4 for xiaomi sm8250 devices. 「Pure、NoKsu、ThinLto」
 
 ---
 
-# NidhiKernel for Xiaomi SM8250 Android™ Devices  
+## NidhiKernel for Xiaomi SM8250 Android™ Devices  
 
-## Table of Contents
+### Table of Contents
 - [Introduction](#introduction)  
 - [Features](#features)  
 - [Notes](#notes)  
@@ -16,7 +16,7 @@
 
 ---
 
-## Introduction
+### Introduction
 
 [বাংলা (Bengali)](README-bn.md)
 
@@ -28,7 +28,7 @@ This kernel stands on the shoulders of giants, combining contributions from mult
 
 ---
 
-## Features
+### Features
 
 This kernel supports [sidex15's KernelSU-Next fork]() ([KernelSU-Next](), a fork of KernelSU ) & [SuSFS](https://gitlab.com/simonpunk/susfs4ksu). Please install the [KernelSU-Next ম্যানেজার]() by yourself.
 
@@ -47,7 +47,7 @@ Below are some of the key features:
 
 ---
 
-## Notes
+### Notes
 
 **Note**: The kernel zip package does **not** contain `dtbo.img` and will not flash your dtbo partition.  
 It is recommended to use the stock `dtbo`, or one from the bundled files of a third-party ROM (if the original author confirms it works well).  
@@ -61,7 +61,7 @@ Feedback about this specific issue will not be accepted by default.
 
 ---
 
-## Supported Devices
+### Supported Devices
 | Device Codename | Device Name            |
 |---------------------|-----------------------------------|
 | psyche              | Xiaomi 12X                        |
@@ -80,7 +80,7 @@ Feedback about this specific issue will not be accepted by default.
 
 ---
 
-## Build Instructions
+### Build Instructions
 
 ### Build using TUI
 Please refer to detailed [Build Instructions for TUI](docs/buildall-instructions.md).
