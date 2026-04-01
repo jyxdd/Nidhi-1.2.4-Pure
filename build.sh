@@ -20,8 +20,19 @@ if [ -z "$TARGET_DEVICE" ]; then
   exit 1
 fi
 
-# 編譯參數
-MAKE_ARGS="ARCH=arm64 SUBARCH=arm64 O=out CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CROSS_COMPILE_COMPAT=arm-linux-gnueabi- CLANG_TRIPLE=aarch64-linux-gnu-"
+# ============================================
+# 編譯參數 (已加入自定義簽名)
+# ============================================
+MAKE_ARGS="ARCH=arm64 \
+SUBARCH=arm64 \
+O=out \
+CC=clang \
+CROSS_COMPILE=aarch64-linux-gnu- \
+CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+CROSS_COMPILE_COMPAT=arm-linux-gnueabi- \
+CLANG_TRIPLE=aarch64-linux-gnu- \
+KBUILD_BUILD_USER=jyxdd \
+KBUILD_BUILD_HOST=Nidhi-CI"
 
 build_variant() {
   local mode=$1
@@ -34,9 +45,10 @@ build_variant() {
   # 1. 生成配置
   make $MAKE_ARGS ${TARGET_DEVICE}_defconfig 2>&1 | tee -a "$log_file"
   
-  # 2. 強制關閉 KSU/SUSFS 配置 (以防萬一)
+  # 2. 強制關閉 KSU/SUSFS 配置並設置純淨版本號
   ./scripts/config --file out/.config -d KSU -d KSU_SUSFS
   ./scripts/config --file out/.config --set-str CONFIG_LOCALVERSION "-Nidhi-Pure"
+  ./scripts/config --file out/.config -d CONFIG_LOCALVERSION_AUTO
 
   # 3. 開始編譯
   make $MAKE_ARGS -j$JOBS 2>&1 | tee -a "$log_file"
