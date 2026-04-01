@@ -19,7 +19,9 @@ jobs:
     - name: Checkout Source
       uses: actions/checkout@v4
       with:
-        fetch-depth: 1 
+        # 強制鎖定 主分支，防止 GitHub Actions 拉取 其它分支
+        ref: pure-1.2.4
+        fetch-depth: 1
 
     - name: Cleanup & Dependencies
       run: |
