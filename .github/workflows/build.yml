@@ -1,4 +1,4 @@
-name: Build Kernel (Pure-ThinLTO)
+name: Build Kernel (Pure)
 
 on:
   workflow_dispatch:
@@ -8,11 +8,11 @@ on:
         required: true
         default: 'munch'
         type: choice
-        options: [munch, psyche, alioth, pipa] # 縮減選項，確保專注於你測試的設備
+        options: [psyche, thyme, umi, munch, lmi, cmi, cas, apollo, alioth, elish, enuma, dagu, pipa]
 
 jobs:
   build:
-    name: Build Kernel for ${{ github.event.inputs.device }}
+    name: Build Kernel for ${{ inputs.device }}
     runs-on: ubuntu-latest
 
     steps:
@@ -23,14 +23,15 @@ jobs:
 
     - name: Cleanup & Dependencies
       run: |
-        sudo rm -rf /var/lib/docker /usr/share/dotnet /opt/ghc "/usr/local/share/boost" "$AGENT_TOOLSDIRECTORY"
+        sudo rm -rf /usr/share/dotnet /opt/ghc "/usr/local/share/boost" "$AGENT_TOOLSDIRECTORY"
         sudo apt-get update
         sudo apt-get install -y build-essential git curl wget bison flex zip bc cpio libssl-dev ccache python-is-python3 gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
 
+    # === 最佳位置：在編譯前禁用 Git 版本後綴 ===
     - name: Disable Git SCM version suffix
       run: |
         touch .scmversion
-        echo "Created .scmversion to ensure a clean version string"
+        echo "Created .scmversion to prevent git hash suffix"
 
     - name: Setup Toolchain
       run: |
@@ -40,43 +41,36 @@ jobs:
 
     - name: Fix Baseband-guard Path
       run: |
+        # 使用環境變數確保路徑 100% 正確
+        # 在工作目錄的同級目錄克隆外部倉庫
         cd ${GITHUB_WORKSPACE}/..
         git clone https://github.com/vc-teahouse/Baseband-guard.git Baseband-guard
+        
+        # 回到你的內核源碼主目錄
         cd ${GITHUB_WORKSPACE}
+        
+        # 清理並重建軟連結，指向剛才克隆的絕對路徑
         rm -rf security/baseband-guard
         mkdir -p security
         ln -sf ${GITHUB_WORKSPACE}/../Baseband-guard security/baseband-guard
-        echo "✅ Baseband-guard path fixed"
+        
+        echo "✅ Baseband-guard 外部鏈接已鎖定，路徑正確。"
 
     - name: Prepare AnyKernel3
       run: |
         rm -rf anykernel
         git clone https://github.com/liyafe1997/AnyKernel3.git anykernel
+        echo "AnyKernel3 prepared from liyafe1997"
 
     - name: Build Kernel
       run: |
-        export PATH=$HOME/zyc-clang/bin:$PATH
-        # 注入 ThinLTO 必備的 LLVM 參數
-        export MAKE_ARGS="ARCH=arm64 \
-        SUBARCH=arm64 \
-        CC=clang \
-        LD=ld.lld \
-        AR=llvm-ar \
-        NM=llvm-nm \
-        OBJCOPY=llvm-objcopy \
-        OBJDUMP=llvm-objdump \
-        STRIP=llvm-strip \
-        CROSS_COMPILE=aarch64-linux-gnu- \
-        CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-        CLANG_TRIPLE=aarch64-linux-gnu- \
-        LLVM=1 \
-        LLVM_IAS=1"
-        
         chmod +x build.sh
-        ./build.sh ${{ github.event.inputs.device }}
+        ./build.sh ${{ inputs.device }}
 
-    - name: Upload Kernel ZIP
+    - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: Nidhi-Pure-ThinLTO-${{ github.event.inputs.device }}
-        path: out/${{ github.event.inputs.device }}/*.zip
+        name: Kernel-${{ inputs.device }}-Pure
+        path: |
+          output/zip/*.zip
+          output/logs/*.log
