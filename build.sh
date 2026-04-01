@@ -1,4 +1,3 @@
-Build.sh我加的對嗎？
 #!/bin/bash
 set -e
 
