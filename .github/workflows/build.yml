@@ -27,6 +27,12 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential git curl wget bison flex zip bc cpio libssl-dev ccache python-is-python3 gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
 
+    # === 最佳位置：在編譯前禁用 Git 版本後綴 ===
+    - name: Disable Git SCM version suffix
+      run: |
+        touch .scmversion
+        echo "Created .scmversion to prevent git hash suffix"
+
     - name: Setup Toolchain
       run: |
         mkdir -p $HOME/zyc-clang
@@ -38,13 +44,14 @@ jobs:
         cd ..
         git clone https://github.com/vc-teahouse/Baseband-guard.git Baseband-guard
         cd -
+        # 建立軟連結確保 Kconfig 能找到路徑
+        rm -rf security/baseband-guard
+        mkdir -p security
+        ln -sf ../../Baseband-guard security/baseband-guard
 
-    # === 在這裡插入：修復 AnyKernel3 404 問題 ===
     - name: Prepare AnyKernel3
       run: |
-        # 刪除倉庫中那個失效的子模組連結/資料夾
         rm -rf anykernel
-        # 重新抓取你指定的正確倉庫
         git clone https://github.com/liyafe1997/AnyKernel3.git anykernel
         echo "AnyKernel3 prepared from liyafe1997"
 
