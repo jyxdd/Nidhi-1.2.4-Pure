@@ -1,3 +1,7 @@
+### NidhiKernel 1.2.4 for xiaomi sm8250 devices. 「Pure、NoKsu、ThinLto」
+
+---
+
 # NidhiKernel for Xiaomi SM8250 Android™ Devices  
 
 ## Table of Contents
