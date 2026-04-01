@@ -41,13 +41,20 @@ jobs:
 
     - name: Fix Baseband-guard Path
       run: |
-        cd ..
+        # 使用環境變數確保路徑 100% 正確
+        # 在工作目錄的同級目錄克隆外部倉庫
+        cd ${GITHUB_WORKSPACE}/..
         git clone https://github.com/vc-teahouse/Baseband-guard.git Baseband-guard
-        cd -
-        # 建立軟連結確保 Kconfig 能找到路徑
+        
+        # 回到你的內核源碼主目錄
+        cd ${GITHUB_WORKSPACE}
+        
+        # 清理並重建軟連結，指向剛才克隆的絕對路徑
         rm -rf security/baseband-guard
         mkdir -p security
-        ln -sf ../../Baseband-guard security/baseband-guard
+        ln -sf ${GITHUB_WORKSPACE}/../Baseband-guard security/baseband-guard
+        
+        echo "✅ Baseband-guard 外部鏈接已鎖定，路徑正確。"
 
     - name: Prepare AnyKernel3
       run: |
