@@ -12,7 +12,7 @@ on:
 
 jobs:
   build:
-    name: Build Kernel for ${{ github.event.inputs.device }}
+    name: Build Kernel for ${{ inputs.device }}
     runs-on: ubuntu-latest
 
     steps:
@@ -23,16 +23,15 @@ jobs:
 
     - name: Cleanup & Dependencies
       run: |
-        # 釋放硬碟空間，防止編譯大核心時溢出
-        sudo rm -rf /var/lib/docker /usr/share/dotnet /opt/ghc "/usr/local/share/boost" "$AGENT_TOOLSDIRECTORY"
+        sudo rm -rf /usr/share/dotnet /opt/ghc "/usr/local/share/boost" "$AGENT_TOOLSDIRECTORY"
         sudo apt-get update
         sudo apt-get install -y build-essential git curl wget bison flex zip bc cpio libssl-dev ccache python-is-python3 gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
 
+    # === 最佳位置：在編譯前禁用 Git 版本後綴 ===
     - name: Disable Git SCM version suffix
       run: |
-        # 防止編譯出的內核版本帶有 -dirty 或 git 哈希後綴
         touch .scmversion
-        echo "Created .scmversion to ensure a clean version string"
+        echo "Created .scmversion to prevent git hash suffix"
 
     - name: Setup Toolchain
       run: |
@@ -42,36 +41,36 @@ jobs:
 
     - name: Fix Baseband-guard Path
       run: |
-        # 在工作目錄同級克隆外部安全模組
+        # 使用環境變數確保路徑 100% 正確
+        # 在工作目錄的同級目錄克隆外部倉庫
         cd ${GITHUB_WORKSPACE}/..
         git clone https://github.com/vc-teahouse/Baseband-guard.git Baseband-guard
         
-        # 回到源碼目錄並建立絕對路徑軟連結
+        # 回到你的內核源碼主目錄
         cd ${GITHUB_WORKSPACE}
+        
+        # 清理並重建軟連結，指向剛才克隆的絕對路徑
         rm -rf security/baseband-guard
         mkdir -p security
-        # 指向外部目錄，確保 Kconfig/Makefile 能通過該路徑讀取
         ln -sf ${GITHUB_WORKSPACE}/../Baseband-guard security/baseband-guard
-        echo "✅ Baseband-guard path fixed with absolute symlink"
+        
+        echo "✅ Baseband-guard 外部鏈接已鎖定，路徑正確。"
 
     - name: Prepare AnyKernel3
       run: |
         rm -rf anykernel
         git clone https://github.com/liyafe1997/AnyKernel3.git anykernel
-        echo "AnyKernel3 prepared for packaging"
+        echo "AnyKernel3 prepared from liyafe1997"
 
     - name: Build Kernel
       run: |
         chmod +x build.sh
-        # 強制傳入設備參數，對接 build.sh 中的 DEVICE=$1
-        ./build.sh ${{ github.event.inputs.device }}
+        ./build.sh ${{ inputs.device }}
 
     - name: Upload Artifacts
-      # 使用 if: always() 確保即便編譯掛了也能拿到 log 排查
-      if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: Kernel-${{ github.event.inputs.device }}-Pure
+        name: Kernel-${{ inputs.device }}-Pure
         path: |
           output/zip/*.zip
           output/logs/*.log
