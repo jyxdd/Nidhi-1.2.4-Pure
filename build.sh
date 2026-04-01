@@ -1,50 +1,81 @@
+看看是否完善或需要修正的地方
+
+#!/bin/bash
+set -e
+
+# ============================================
+# 路徑配置 (雲端優化)
+# ============================================
+OUTPUT_DIR="$(pwd)/output"
+LOG_DIR="$OUTPUT_DIR/logs"
+ZIP_OUT_DIR="$OUTPUT_DIR/zip"
+mkdir -p "$LOG_DIR" "$ZIP_OUT_DIR"
+
+TOOLCHAIN_PATH=$HOME/zyc-clang/bin
+export PATH="$TOOLCHAIN_PATH:$PATH"
+
+TARGET_DEVICE=$1
+JOBS=$(nproc)
+
+if [ -z "$TARGET_DEVICE" ]; then
+  echo "Error: Device codename not specified!"
+  exit 1
+fi
+
+# ============================================
+# 編譯參數 (已加入自定義簽名)
+# ============================================
+MAKE_ARGS="ARCH=arm64 \
+SUBARCH=arm64 \
+O=out \
+CC=clang \
+CROSS_COMPILE=aarch64-linux-gnu- \
+CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+CROSS_COMPILE_COMPAT=arm-linux-gnueabi- \
+CLANG_TRIPLE=aarch64-linux-gnu- \
+KBUILD_BUILD_USER=jyxdd \
+KBUILD_BUILD_HOST=Nidhi-CI"
+
 build_variant() {
   local mode=$1
-  # 每次編譯前清空 out，否則 ThinLTO 會撐爆硬碟
+  local log_file="$LOG_DIR/build_${TARGET_DEVICE}_${mode}.log"
+  echo "--- Starting Build for $mode ---"
+  
+  # 清理舊緩存
   rm -rf out/
-  mkdir -p out
-
-  echo "--- 🚀 Starting ThinLTO Build for $TARGET_DEVICE ($mode) ---"
-
+  
   # 1. 生成配置
-  make $MAKE_ARGS O=out ${TARGET_DEVICE}_defconfig
+  make $MAKE_ARGS ${TARGET_DEVICE}_defconfig 2>&1 | tee -a "$log_file"
   
-  # 2. 注入 ThinLTO 與 Pure 設置
-  ./scripts/config --file out/.config -e CONFIG_LTO_CLANG -d CONFIG_LTO_NONE -e CONFIG_THINLTO
-  ./scripts/config --file out/.config -d CONFIG_KSU -d CONFIG_KSU_SUSFS
-  ./scripts/config --file out/.config --set-str CONFIG_LOCALVERSION "-Nidhi-Pure-LTO-${mode}"
-  
-  make $MAKE_ARGS O=out olddefconfig
+  # 2. 強制關閉 KSU/SUSFS 配置並設置純淨版本號
+  ./scripts/config --file out/.config -d KSU -d KSU_SUSFS
+  ./scripts/config --file out/.config --set-str CONFIG_LOCALVERSION "-Nidhi-Pure"
+  ./scripts/config --file out/.config -d CONFIG_LOCALVERSION_AUTO
 
-  # 3. 編譯
-  make $MAKE_ARGS O=out -j$(nproc)
+  # 3. 開始編譯
+  make $MAKE_ARGS -j$JOBS 2>&1 | tee -a "$log_file"
   
-  # 4. 關鍵：打包前清理，騰出空間給 ZIP
+  # 4. 打包 ZIP
   if [ -f out/arch/arm64/boot/Image ]; then
-    echo "✅ Kernel compiled! Freeing space..."
-    # 刪除佔用好幾 GB 的中間件，只保留 Image 和 dtb
-    find out -name "*.o" -type f -delete
-    find out -name "*.bc" -type f -delete
+    echo "Kernel compiled successfully! Packing..."
+    find out/arch/arm64/boot/dts -name '*.dtb' -exec cat {} + > out/arch/arm64/boot/dtb
+    rm -rf anykernel/kernels/ && mkdir -p anykernel/kernels/
+    cp out/arch/arm64/boot/Image anykernel/kernels/
+    cp out/arch/arm64/boot/dtb anykernel/kernels/
 
-    # 進入 AnyKernel3 打包
     cd anykernel
-    rm -rf kernels/*.zip *.zip # 清理舊包
-    mkdir -p kernels/
-    cp ../out/arch/arm64/boot/Image kernels/
-    # 這裡確保你的 dtb 抓取邏輯正確
-    
-    # 使用固定、好找的名字
-    local ZIP_NAME="Nidhi-Pure-LTO-${mode}-${TARGET_DEVICE}.zip"
-    zip -r9 "$ZIP_NAME" ./* -x .git .gitignore
-    
-    # 確保移動到 yml 能抓到的位置 (源碼根目錄/out/device)
-    mkdir -p "../out/${TARGET_DEVICE}"
-    mv "$ZIP_NAME" "../out/${TARGET_DEVICE}/"
-    
-    echo "✅ ZIP created: out/${TARGET_DEVICE}/$ZIP_NAME"
+    ZIP_NAME="NidhiKernel_${TARGET_DEVICE}_${mode}_Pure.zip"
+    zip -r9 "$ZIP_NAME" ./* -x .git .gitignore out/ ./*.zip
+    mv "$ZIP_NAME" "$ZIP_OUT_DIR/"
     cd ..
   else
-    echo "❌ Build failed, Image not found!"
+    echo "Error: Kernel Image not found for $mode!"
     exit 1
   fi
 }
+
+# 執行編譯流程
+build_variant "AOSP"
+build_variant "MIUI"
+
+echo "Build Process Completed!"
