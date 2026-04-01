@@ -39,13 +39,16 @@ build_variant() {
   local log_file="$LOG_DIR/build_${TARGET_DEVICE}_${mode}.log"
   echo "--- Starting Build for $mode ---"
   
-  # === 核心修復：預先建立輸出目錄，防止配置注入時找不到路徑 ===
+  # === 核心修復：預先建立輸出目錄 ===
   rm -rf out/
   mkdir -p out
 
-  # 1. 生成配置
+  # 1. 生成配置 (確保 O=out 生效)
   make $MAKE_ARGS ${TARGET_DEVICE}_defconfig 2>&1 | tee -a "$log_file"
   
+  # === 自動修復：若 .config 出現在根目錄則搬移至 out/ ===
+  [ -f .config ] && mv .config out/.config
+
   # 2. 強制關閉 KSU/SUSFS 配置並設置純淨版本號
   ./scripts/config --file out/.config -d KSU -d KSU_SUSFS
   ./scripts/config --file out/.config --set-str CONFIG_LOCALVERSION "-Nidhi-Pure"
