@@ -1,6 +1,6 @@
 # NidhiKernel 1.2.4 for xiaomi sm8250 devices. 「Pure、NoKsu、ThinLto」
 
-- Display Philosophy: Kept as Pure as possible. No proprietary DC Dimming or HBM nodes to ensure maximum compatibility across different AOSP ROMs.
+- Display Philosophy: Kept as Pure as possible. No proprietary DC Dimming or HBM nodes to ensure maximum compatibility across different ROMs.
 - Design Choice: Stripped unnecessary display hooks for a cleaner, more stable kernel experience.
 
 
