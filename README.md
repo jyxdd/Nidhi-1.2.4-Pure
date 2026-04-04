@@ -4,6 +4,7 @@
 - Design Choice: Stripped unnecessary display hooks for a cleaner, more stable kernel experience.
 
 
+
 ---
 
 ## NidhiKernel for Xiaomi SM8250 Android™ Devices  
