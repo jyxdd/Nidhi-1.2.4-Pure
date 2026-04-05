@@ -4,6 +4,7 @@
 - Design Choice: Stripped unnecessary display hooks for a cleaner, more stable kernel experience.
 
 
+- Root [Kitsune Mask](https://github.com/QOS3/Magisk/releases)
 
 ---
 
