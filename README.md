@@ -36,7 +36,7 @@ This kernel stands on the shoulders of giants, combining contributions from mult
 
 ### Features
 
-This kernel supports [sidex15's KernelSU-Next fork]() ([KernelSU-Next](), a fork of KernelSU ) & [SuSFS](https://gitlab.com/simonpunk/susfs4ksu). Please install the [KernelSU-Next ম্যানেজার]() by yourself.
+This kernel supports [sidex15's KernelSU-Next fork]() ([KernelSU-Next](https://github.com/sidex15/KernelSU-Next), a fork of KernelSU ) & [SuSFS](https://gitlab.com/simonpunk/susfs4ksu). Please install the [KernelSU-Next ম্যানেজার]() by yourself.
 
 The NoKernelSU version supports Magisk and APatch (and their forks).  
 
